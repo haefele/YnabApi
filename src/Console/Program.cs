@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Ynab;
+using Ynab.Desktop;
 using Ynab.Items;
 
 namespace Console
@@ -17,7 +18,7 @@ namespace Console
 
         private static async Task Run()
         {
-            YnabApi api = new YnabApi();
+            YnabApi api = new YnabApi(new DesktopFileSystem());
             var budgets = await api.GetBudgetsAsync();
 
             var testBudget = budgets.First(f => f.BudgetName == "Test-Budget");

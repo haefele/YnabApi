@@ -1,10 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Ynab.Files;
 using Ynab.Helpers;
 using Ynab.Items;
 
@@ -12,8 +10,12 @@ namespace Ynab
 {
     public class RegisteredDevice
     {
-        public RegisteredDevice(Budget budget, JObject device)
+        private readonly IFileSystem _fileSystem;
+
+        public RegisteredDevice(IFileSystem fileSystem, Budget budget, JObject device)
         {
+            this._fileSystem = fileSystem;
+
             this.Budget = budget;
             this.FriendlyName = device.Value<string>("friendlyName");
             this.ShortDeviceId = device.Value<string>("shortDeviceId");
@@ -55,16 +57,16 @@ namespace Ynab
                 { "publishTime", DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss") },
                 { "items", itemsJsonArray }
             };
-            
-            File.WriteAllText(YnabPaths.YdiffFile(dataPath, this.DeviceGuid, startVersion, this.ShortDeviceId, this.CurrentKnowledge).ToFullPath(), json.ToString());
 
+            await this._fileSystem.WriteFileAsync(YnabPaths.YdiffFile(dataPath, this.DeviceGuid, startVersion, this.ShortDeviceId, this.CurrentKnowledge), json.ToString());
+            
             var deviceFilePath = YnabPaths.DeviceFile(dataPath, this.ShortDeviceId);
-            var deviceFileContent = await FileHelpers.ReadFileAsync(deviceFilePath.ToFullPath());
+            var deviceFileContent = await this._fileSystem.ReadFileAsync(deviceFilePath);
 
             var deviceFile = JObject.Parse(deviceFileContent);
             deviceFile["knowledge"] = endVersion;
 
-            File.WriteAllText(deviceFilePath.ToFullPath(), deviceFile.ToString());
+            await this._fileSystem.WriteFileAsync(deviceFilePath, deviceFile.ToString());
         }
     }
 }

@@ -4,12 +4,6 @@ namespace Ynab.Helpers
 {
     public static class YnabPaths
     {
-        private const string DropboxPath = @"C:\Users\haefe\Dropbox";
-
-        public static string ToFullPath(this string path)
-        {
-            return Path.Combine(DropboxPath, path);
-        }
 
         public static string YnabSettingsFile()
         {

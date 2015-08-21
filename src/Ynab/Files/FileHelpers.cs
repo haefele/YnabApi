@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
 
-namespace Ynab.Helpers
+namespace Ynab.Files
 {
     public static class FileHelpers
     {

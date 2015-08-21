@@ -3,17 +3,25 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
+using Ynab.Files;
 using Ynab.Helpers;
 
 namespace Ynab
 {
     public class YnabApi
     {
+        private readonly IFileSystem _fileSystem;
+
+        public YnabApi(IFileSystem fileSystem)
+        {
+            this._fileSystem = fileSystem;
+        }
+
         public async Task<IList<Budget>> GetBudgetsAsync()
         {
-            string ynabSettingsFilePath = YnabPaths.YnabSettingsFile().ToFullPath();
-            
-            var ynabSettingsJson = await FileHelpers.ReadFileAsync(ynabSettingsFilePath);
+            string ynabSettingsFilePath = YnabPaths.YnabSettingsFile();
+
+            var ynabSettingsJson = await this._fileSystem.ReadFileAsync(ynabSettingsFilePath);
             var ynabSettings = JObject.Parse(ynabSettingsJson);
 
             string relativeBudgetsFolder = ynabSettings.Value<string>("relativeDefaultBudgetsFolder");
@@ -22,7 +30,7 @@ namespace Ynab
                 .Value<JArray>("relativeKnownBudgets")
                 .Values()
                 .Select(f => f.Value<string>())
-                .Select(f => new Budget(this.ExtractBudgetName(f, relativeBudgetsFolder), f))
+                .Select(f => new Budget(this._fileSystem, this.ExtractBudgetName(f, relativeBudgetsFolder), f))
                 .ToArray();
         }
 

@@ -1,20 +1,23 @@
-using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
+using Ynab.Files;
 using Ynab.Helpers;
 
 namespace Ynab
 {
     public class Budget
     {
+        private readonly IFileSystem _fileSystem;
+
         public string BudgetName { get; }
         public string BudgetPath { get; }
 
-        public Budget(string budgetName, string budgetPath)
+        public Budget(IFileSystem fileSystem, string budgetName, string budgetPath)
         {
+            this._fileSystem = fileSystem;
+
             this.BudgetName = budgetName;
             this.BudgetPath = budgetPath;
         }
@@ -22,16 +25,15 @@ namespace Ynab
         public async Task<IList<RegisteredDevice>> GetRegisteredDevicesAsync()
         {
             var dataFolderPath = await this.GetDataFolderPathAsync();
-            var devicesFolder = new DirectoryInfo(YnabPaths.DevicesFolder(dataFolderPath).ToFullPath());
 
             var result = new List<RegisteredDevice>();
 
-            foreach (var deviceFile in devicesFolder.GetFiles())
+            foreach (var deviceFile in await this._fileSystem.GetFilesAsync(YnabPaths.DevicesFolder(dataFolderPath)))
             {
-                var deviceJson = await FileHelpers.ReadFileAsync(deviceFile);
+                var deviceJson = await this._fileSystem.ReadFileAsync(deviceFile);
                 var device = JObject.Parse(deviceJson);
 
-                result.Add(new RegisteredDevice(this, device));
+                result.Add(new RegisteredDevice(this._fileSystem, this, device));
             }
 
             return result;
@@ -66,14 +68,13 @@ namespace Ynab
             var dataFolderPath = await this.GetDataFolderPathAsync();
             var deviceFilePath = YnabPaths.DeviceFile(dataFolderPath, deviceId);
 
-            File.WriteAllText(deviceFilePath.ToFullPath(), json.ToString());
+            await this._fileSystem.WriteFileAsync(deviceFilePath, json.ToString());
+            await this._fileSystem.CreateDirectoryAsync(YnabPaths.DeviceFolder(dataFolderPath, deviceGuid));
 
-            Directory.CreateDirectory(YnabPaths.DeviceFolder(dataFolderPath, deviceGuid).ToFullPath());
-
-            var deviceJson = await FileHelpers.ReadFileAsync(deviceFilePath.ToFullPath());
+            var deviceJson = await this._fileSystem.ReadFileAsync(deviceFilePath);
             var device = JObject.Parse(deviceJson);
 
-            return new RegisteredDevice(this, device);
+            return new RegisteredDevice(this._fileSystem, this, device);
         }
         
         private async Task<string> GetNextFreeDeviceIdAsync()
@@ -93,9 +94,9 @@ namespace Ynab
 
         internal async Task<string> GetDataFolderPathAsync()
         {
-            var budgetFilePath = YnabPaths.BudgetMetadataFile(this.BudgetPath).ToFullPath();
+            var budgetFilePath = YnabPaths.BudgetMetadataFile(this.BudgetPath);
 
-            var budgetJson = await FileHelpers.ReadFileAsync(budgetFilePath);
+            var budgetJson = await this._fileSystem.ReadFileAsync(budgetFilePath);
             var budget = JObject.Parse(budgetJson);
 
             var relativeDataFolderPath = budget.Value<string>("relativeDataFolderName");

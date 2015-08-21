@@ -41,9 +41,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Budget.cs" />
+    <Compile Include="Files\IFileSystem.cs" />
     <Compile Include="Helpers\EntityId.cs" />
     <Compile Include="Helpers\YnabPaths.cs" />
-    <Compile Include="Helpers\FileHelpers.cs" />
+    <Compile Include="Files\FileHelpers.cs" />
     <Compile Include="Items\IYnabItem.cs" />
     <Compile Include="Helpers\Knowledge.cs" />
     <Compile Include="Items\Payee.cs" />
