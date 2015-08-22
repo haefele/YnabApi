@@ -83,7 +83,8 @@ namespace Ynab
             var latestDeviceIdAsCharacter = registeredDevices
                 .Select(f => f.ShortDeviceId)
                 .OrderByDescending(f => f)
-                .First()
+                .First() 
+                .ToCharArray()
                 .First();
 
             var nextDeviceIdAsInt = latestDeviceIdAsCharacter + 1;

@@ -56,7 +56,7 @@
       <Name>Ynab.Desktop</Name>
     </ProjectReference>
     <ProjectReference Include="..\Ynab\Ynab.csproj">
-      <Project>{15EF508B-9561-488C-B4ED-29A8E50D513E}</Project>
+      <Project>{1e107947-52aa-458f-a073-c7acffe540e2}</Project>
       <Name>Ynab</Name>
     </ProjectReference>
   </ItemGroup>
