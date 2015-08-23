@@ -53,9 +53,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Ynab.Desktop\Ynab.Desktop %28Desktop%29.csproj">
+    <ProjectReference Include="..\Ynab.Desktop\Ynab.Desktop.csproj">
       <Project>{E33E9289-14A0-463D-8D26-A914102AE306}</Project>
-      <Name>Ynab.Desktop %28Desktop%29</Name>
+      <Name>Ynab.Desktop</Name>
     </ProjectReference>
     <ProjectReference Include="..\Ynab.Dropbox\Ynab.Dropbox.csproj">
       <Project>{53C23FC3-5C0D-44D2-ACF1-50A358A404A6}</Project>
