@@ -22,6 +22,7 @@ namespace Ynab
             this.HasFullKnowledge = device.Value<bool>("hasFullKnowledge");
             this.CurrentKnowledge = Knowledge.ExtractKnowledgeForDevice(device.Value<string>("knowledge"), this.ShortDeviceId);
             this.DeviceGuid = device.Value<string>("deviceGUID");
+            this.YNABVersion = device.Value<string>("YNABVersion");
         }
 
         public Budget Budget { get; }
@@ -30,6 +31,7 @@ namespace Ynab
         public bool HasFullKnowledge { get; }
         public int CurrentKnowledge { get; private set; }
         public string DeviceGuid { get; }
+        public string YNABVersion { get; }
 
         public async Task InsertItems(params IYnabItem[] items)
         {

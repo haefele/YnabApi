@@ -43,8 +43,10 @@ namespace Ynab
         {
             var alreadyRegisteredDevices = await this.GetRegisteredDevicesAsync();
 
-            if (alreadyRegisteredDevices.Any(f => f.FriendlyName == deviceName))
-                return alreadyRegisteredDevices.First(f => f.FriendlyName == deviceName);
+            var existingDevice = alreadyRegisteredDevices.FirstOrDefault(f => f.FriendlyName == deviceName && f.YNABVersion == Constants.YnabVersion);
+
+            if (existingDevice != null)
+                return existingDevice;
 
             var deviceId = await this.GetNextFreeDeviceIdAsync();
             var deviceGuid = EntityId.CreateNew();
@@ -59,7 +61,7 @@ namespace Ynab
                 { "knowledge", Knowledge.CreateKnowledgeForNewDevice(alreadyRegisteredDevices, deviceId) },
                 { "deviceGUID", deviceGuid },
                 { "knowledgeInFullBudgetFile", null },
-                { "YNABVersion", "Desktop Xemio" },
+                { "YNABVersion", Constants.YnabVersion },
                 { "formatVersion", "1.2" },
                 { "lastDataVersionFullyKnown", "4.2" }
             };

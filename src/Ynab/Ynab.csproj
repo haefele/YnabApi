@@ -35,6 +35,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Budget.cs" />
+    <Compile Include="Constants.cs" />
     <Compile Include="Files\IFileSystem.cs" />
     <Compile Include="Helpers\EntityId.cs" />
     <Compile Include="Helpers\Knowledge.cs" />
