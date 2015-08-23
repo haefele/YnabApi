@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Ynab;
 using Ynab.Desktop;
+using Ynab.DeviceActions;
 using Ynab.Dropbox;
-using Ynab.Items;
 
 namespace Console
 {
@@ -19,6 +20,8 @@ namespace Console
 
         private static async Task Run()
         {
+            var watch = Stopwatch.StartNew();
+
             var dropboxFileSystem = new DropboxFileSystem("");
             var desktopFileSystem = new DesktopFileSystem();
 
@@ -30,16 +33,25 @@ namespace Console
 
             var registeredDevice = await testBudget.RegisterDevice(Environment.MachineName);
 
-            var transaction = new Transaction
+            var createPayee = new CreatePayeeDeviceAction
+            {
+                Name = "Bücherei"
+            };
+            var createTransaction = new CreateTransactionDeviceAction
             {
                 Amount = -20.0m,
                 AccountId = "ACCOUNT-ID-1",
                 CategoryId = "CATEGORY-ID-1",
                 Memo = "#Mittagspause",
-                PayeeId = "PAYEE-ID-1"
+                PayeeId = createPayee.Id
             };
 
-            await registeredDevice.InsertItems(transaction);
+            await registeredDevice.ExecuteActions(createPayee, createTransaction);
+
+            watch.Stop();
+            System.Console.WriteLine(watch.Elapsed);
+
+            System.Console.ReadLine();
         }
     }
 }
