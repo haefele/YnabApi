@@ -11,6 +11,11 @@ namespace Ynab
     {
         private readonly IFileSystem _fileSystem;
 
+        private bool _hasCachedRegisteredDevices;
+        private IList<RegisteredDevice> _cachedRegisteredDevices;
+        private bool _hasCachedDataFolderPath;
+        private string _cachedDataFolderPath;
+
         public string BudgetName { get; }
         public string BudgetPath { get; }
 
@@ -24,26 +29,31 @@ namespace Ynab
 
         public async Task<IList<RegisteredDevice>> GetRegisteredDevicesAsync()
         {
-            var dataFolderPath = await this.GetDataFolderPathAsync();
+            if (this._hasCachedRegisteredDevices == false)
+            { 
+                var dataFolderPath = await this.GetDataFolderPathAsync();
 
-            var result = new List<RegisteredDevice>();
+                this._cachedRegisteredDevices = new List<RegisteredDevice>();
 
-            foreach (var deviceFile in await this._fileSystem.GetFilesAsync(YnabPaths.DevicesFolder(dataFolderPath)))
-            {
-                var deviceJson = await this._fileSystem.ReadFileAsync(deviceFile);
-                var device = JObject.Parse(deviceJson);
+                foreach (var deviceFile in await this._fileSystem.GetFilesAsync(YnabPaths.DevicesFolder(dataFolderPath)))
+                {
+                    var deviceJson = await this._fileSystem.ReadFileAsync(deviceFile);
+                    var device = JObject.Parse(deviceJson);
 
-                result.Add(new RegisteredDevice(this._fileSystem, this, device));
+                    this._cachedRegisteredDevices.Add(new RegisteredDevice(this._fileSystem, this, device));
+                }
+
+                this._hasCachedRegisteredDevices = true;
             }
 
-            return result;
+            return this._cachedRegisteredDevices;
         }
         
         public async Task<RegisteredDevice> RegisterDevice(string deviceName)
         {
             var alreadyRegisteredDevices = await this.GetRegisteredDevicesAsync();
 
-            var existingDevice = alreadyRegisteredDevices.FirstOrDefault(f => f.FriendlyName == deviceName && f.YNABVersion == Constants.YnabVersion);
+            var existingDevice = alreadyRegisteredDevices.FirstOrDefault(f => f.FriendlyName == deviceName && f.YnabVersion == Constants.YnabVersion);
 
             if (existingDevice != null)
                 return existingDevice;
@@ -76,7 +86,10 @@ namespace Ynab
             var deviceJson = await this._fileSystem.ReadFileAsync(deviceFilePath);
             var device = JObject.Parse(deviceJson);
 
-            return new RegisteredDevice(this._fileSystem, this, device);
+            var result = new RegisteredDevice(this._fileSystem, this, device);
+            this._cachedRegisteredDevices.Add(result);
+
+            return result;
         }
         
         private async Task<string> GetNextFreeDeviceIdAsync()
@@ -97,13 +110,20 @@ namespace Ynab
 
         internal async Task<string> GetDataFolderPathAsync()
         {
-            var budgetFilePath = YnabPaths.BudgetMetadataFile(this.BudgetPath);
+            if (this._hasCachedDataFolderPath == false)
+            { 
+                var budgetFilePath = YnabPaths.BudgetMetadataFile(this.BudgetPath);
 
-            var budgetJson = await this._fileSystem.ReadFileAsync(budgetFilePath);
-            var budget = JObject.Parse(budgetJson);
+                var budgetJson = await this._fileSystem.ReadFileAsync(budgetFilePath);
+                var budget = JObject.Parse(budgetJson);
 
-            var relativeDataFolderPath = budget.Value<string>("relativeDataFolderName");
-            return YnabPaths.DataFolder(this.BudgetPath, relativeDataFolderPath);
+                var relativeDataFolderPath = budget.Value<string>("relativeDataFolderName");
+                this._cachedDataFolderPath = YnabPaths.DataFolder(this.BudgetPath, relativeDataFolderPath);
+
+                this._hasCachedDataFolderPath = true;
+            }
+
+            return this._cachedDataFolderPath;
         }
     }
 }
