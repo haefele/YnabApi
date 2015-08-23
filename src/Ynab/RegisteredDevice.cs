@@ -22,7 +22,7 @@ namespace Ynab
             this.FriendlyName = device.Value<string>("friendlyName");
             this.ShortDeviceId = device.Value<string>("shortDeviceId");
             this.HasFullKnowledge = device.Value<bool>("hasFullKnowledge");
-            this.CurrentKnowledge = Knowledge.ExtractKnowledgeForDevice(device.Value<string>("knowledge"), this.ShortDeviceId);
+            this.CurrentKnowledge = Knowledge.ExtractKnowledgeForDevice(this.GetKnowledgeString(), this.ShortDeviceId);
             this.DeviceGuid = device.Value<string>("deviceGUID");
             this.YnabVersion = device.Value<string>("YNABVersion");
         }
@@ -34,6 +34,11 @@ namespace Ynab
         public int CurrentKnowledge { get; private set; }
         public string DeviceGuid { get; }
         public string YnabVersion { get; }
+
+        public string GetKnowledgeString()
+        {
+            return this._device.Value<string>("knowledge");
+        }
         
         public async Task InsertItems(params IYnabItem[] items)
         {
@@ -42,11 +47,9 @@ namespace Ynab
             JArray itemsJsonArray = new JArray(from item in items
                                                let knowledge = ++this.CurrentKnowledge
                                                select item.ToJsonForYdiff(this.ShortDeviceId, knowledge));
-
-            var allDevices = await this.Budget.GetRegisteredDevicesAsync();
-
-            var startVersion = Knowledge.CreateKnowledgeForYdiff(allDevices, this.ShortDeviceId, startKnowledge);
-            var endVersion = Knowledge.CreateKnowledgeForYdiff(allDevices, this.ShortDeviceId, this.CurrentKnowledge);
+            
+            var startVersion = Knowledge.CreateKnowledgeForYdiff(this.GetKnowledgeString(), this.ShortDeviceId, startKnowledge);
+            var endVersion = Knowledge.CreateKnowledgeForYdiff(this.GetKnowledgeString(), this.ShortDeviceId, this.CurrentKnowledge);
 
             var dataPath = await this.Budget.GetDataFolderPathAsync();
             var json = new JObject

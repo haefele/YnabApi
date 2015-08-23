@@ -30,21 +30,25 @@ namespace Ynab.Helpers
             return result.ToDictionary(f => f.Device, f => f.Knowledge);
         }
 
-        public static string CreateKnowledgeForNewDevice(IEnumerable<RegisteredDevice> device, string deviceId)
+        public static string CreateKnowledgeForNewDevice(string knowledgeString, string deviceId)
         {
-            var knowledge = CreateKnowledge(device);
-            return $"{knowledge},{deviceId}-0";
+            if (knowledgeString.Contains(deviceId))
+                return knowledgeString;
+            
+            return $"{knowledgeString},{deviceId}-0";
         }
 
-        public static string CreateKnowledgeForYdiff(IEnumerable<RegisteredDevice> devices, string shortDeviceId, int knowledgeCount)
+        public static string CreateKnowledgeForYdiff(string knowledgeString, string shortDeviceId, int knowledgeCount)
         {
-            var knowledge = CreateKnowledge(devices.Where(f => f.ShortDeviceId != shortDeviceId));
-            return $"{knowledge},{shortDeviceId}-{knowledgeCount}";
+            var parsed = ParseKnowledge(knowledgeString);
+            parsed[shortDeviceId] = knowledgeCount;
+
+            return CreateKnowledge(parsed);
         }
 
-        public static string CreateKnowledge(IEnumerable<RegisteredDevice> devices)
+        public static string CreateKnowledge(Dictionary<string, int> knowledge)
         {
-            return string.Join(",", devices.Select(f => $"{f.ShortDeviceId}-{f.CurrentKnowledge}"));
+            return string.Join(",", knowledge.Select(f => $"{f.Key}-{f.Value}"));
         }
     }
 }

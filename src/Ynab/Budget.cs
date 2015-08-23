@@ -12,7 +12,8 @@ namespace Ynab
         private readonly IFileSystem _fileSystem;
 
         private bool _hasCachedRegisteredDevices;
-        private IList<RegisteredDevice> _cachedRegisteredDevices;
+        private IList<RegisteredDevice> _cachedRegisteredDevices
+            ;
         private bool _hasCachedDataFolderPath;
         private string _cachedDataFolderPath;
 
@@ -68,25 +69,21 @@ namespace Ynab
                 { "friendlyName", deviceName },
                 { "shortDeviceId", deviceId },
                 { "hasFullKnowledge", false },
-                { "knowledge", Knowledge.CreateKnowledgeForNewDevice(alreadyRegisteredDevices, deviceId) },
+                { "knowledge", Knowledge.CreateKnowledgeForNewDevice(alreadyRegisteredDevices.First(f => f.HasFullKnowledge).GetKnowledgeString(), deviceId) },
                 { "deviceGUID", deviceGuid },
                 { "knowledgeInFullBudgetFile", null },
                 { "YNABVersion", Constants.YnabVersion },
                 { "formatVersion", "1.2" },
                 { "lastDataVersionFullyKnown", "4.2" }
             };
-
-
+            
             var dataFolderPath = await this.GetDataFolderPathAsync();
             var deviceFilePath = YnabPaths.DeviceFile(dataFolderPath, deviceId);
 
             await this._fileSystem.WriteFileAsync(deviceFilePath, json.ToString());
             await this._fileSystem.CreateDirectoryAsync(YnabPaths.DeviceFolder(dataFolderPath, deviceGuid));
-
-            var deviceJson = await this._fileSystem.ReadFileAsync(deviceFilePath);
-            var device = JObject.Parse(deviceJson);
-
-            var result = new RegisteredDevice(this._fileSystem, this, device);
+            
+            var result = new RegisteredDevice(this._fileSystem, this, json);
             this._cachedRegisteredDevices.Add(result);
 
             return result;
