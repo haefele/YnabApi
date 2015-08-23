@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Ynab;
 using Ynab.Desktop;
+using Ynab.Dropbox;
 using Ynab.Items;
 
 namespace Console
@@ -18,7 +19,10 @@ namespace Console
 
         private static async Task Run()
         {
-            YnabApi api = new YnabApi(new DesktopFileSystem());
+            var dropboxFileSystem = new DropboxFileSystem("");
+            var desktopFileSystem = new DesktopFileSystem();
+
+            YnabApi api = new YnabApi(dropboxFileSystem);
             var budgets = await api.GetBudgetsAsync();
 
             var testBudget = budgets.First(f => f.BudgetName == "Test-Budget");
