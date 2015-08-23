@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using Ynab.DeviceActions;
 using Ynab.Files;
 using Ynab.Helpers;
+using Ynab.Items;
 
 namespace Ynab
 {
@@ -12,6 +14,10 @@ namespace Ynab
     {
         private readonly IFileSystem _fileSystem;
         private readonly JObject _device;
+
+        private Lazy<Task<IList<Payee>>> _cachedPayees;
+        private Lazy<Task<IList<Account>>> _cachedAccounts;
+        private Lazy<Task<JObject>> _cachedBudgetFile; 
 
         public RegisteredDevice(IFileSystem fileSystem, Budget budget, JObject device)
         {
@@ -22,7 +28,8 @@ namespace Ynab
             this.FriendlyName = device.Value<string>("friendlyName");
             this.ShortDeviceId = device.Value<string>("shortDeviceId");
             this.HasFullKnowledge = device.Value<bool>("hasFullKnowledge");
-            this.CurrentKnowledge = Knowledge.ExtractKnowledgeForDevice(this.GetKnowledgeString(), this.ShortDeviceId);
+            this.KnowledgeString = device.Value<string>("knowledge");
+            this.CurrentKnowledge = Knowledge.ExtractKnowledgeForDevice(this.KnowledgeString, this.ShortDeviceId);
             this.DeviceGuid = device.Value<string>("deviceGUID");
             this.YnabVersion = device.Value<string>("YNABVersion");
         }
@@ -32,12 +39,50 @@ namespace Ynab
         public string ShortDeviceId { get; }
         public bool HasFullKnowledge { get; }
         public int CurrentKnowledge { get; private set; }
+        public string KnowledgeString { get; private set; }
         public string DeviceGuid { get; }
         public string YnabVersion { get; }
-
-        public string GetKnowledgeString()
+        
+        public Task<IList<Payee>> GetPayeesAsync()
         {
-            return this._device.Value<string>("knowledge");
+            if (this._cachedPayees == null)
+            {
+                this._cachedPayees = new Lazy<Task<IList<Payee>>>(async () =>
+                {
+                    if (this.HasFullKnowledge == false)
+                        return new List<Payee>();
+
+                    var budgetFile = await this.GetBudgetFileAsync();
+                    return budgetFile
+                        .Value<JArray>("payees")
+                        .Values<JObject>()
+                        .Select(f => new Payee(f))
+                        .ToList();
+                });
+            }
+
+            return this._cachedPayees.Value;
+        }
+
+        public Task<IList<Account>> GetAccountsAsync()
+        {
+            if (this._cachedAccounts == null)
+            {
+                this._cachedAccounts = new Lazy<Task<IList<Account>>>(async () =>
+                {
+                    if (this.HasFullKnowledge == false)
+                        return new List<Account>();
+
+                    var budgetFile = await this.GetBudgetFileAsync();
+                    return budgetFile
+                        .Value<JArray>("accounts")
+                        .Values<JObject>()
+                        .Select(f => new Account(f))
+                        .ToList();
+                });
+            }
+
+            return this._cachedAccounts.Value;
         }
         
         public async Task ExecuteActions(params IDeviceAction[] actions)
@@ -48,8 +93,8 @@ namespace Ynab
                                                let knowledge = ++this.CurrentKnowledge
                                                select action.ToJsonForYdiff(this.ShortDeviceId, knowledge));
             
-            var startVersion = Knowledge.CreateKnowledgeForYdiff(this.GetKnowledgeString(), this.ShortDeviceId, startKnowledge);
-            var endVersion = Knowledge.CreateKnowledgeForYdiff(this.GetKnowledgeString(), this.ShortDeviceId, this.CurrentKnowledge);
+            var startVersion = Knowledge.CreateKnowledgeForYdiff(this.KnowledgeString, this.ShortDeviceId, startKnowledge);
+            var endVersion = Knowledge.CreateKnowledgeForYdiff(this.KnowledgeString, this.ShortDeviceId, this.CurrentKnowledge);
 
             var dataPath = await this.Budget.GetDataFolderPathAsync();
             var json = new JObject
@@ -66,11 +111,33 @@ namespace Ynab
             };
 
             await this._fileSystem.WriteFileAsync(YnabPaths.YdiffFile(dataPath, this.DeviceGuid, startVersion, this.ShortDeviceId, this.CurrentKnowledge), json.ToString());
-            
-            this._device["knowledge"] = endVersion;
 
+            this.KnowledgeString = endVersion;
+            this._device["knowledge"] = endVersion;
             var deviceFilePath = YnabPaths.DeviceFile(dataPath, this.ShortDeviceId);
             await this._fileSystem.WriteFileAsync(deviceFilePath, this._device.ToString());
         }
+
+
+        #region Private Methods
+        private Task<JObject> GetBudgetFileAsync()
+        {
+            if (this._cachedBudgetFile == null)
+            {
+                this._cachedBudgetFile = new Lazy<Task<JObject>>(async () =>
+                {
+                    if (this.HasFullKnowledge == false)
+                        throw new NotSupportedException("Accessing the budget file only works if the device has full budget knowledge. In this case, it doesn't.");
+
+                    var filePath = YnabPaths.BudgetFile(YnabPaths.DeviceFolder(await this.Budget.GetDataFolderPathAsync(), this.DeviceGuid));
+                    string file = await this._fileSystem.ReadFileAsync(filePath);
+
+                    return JObject.Parse(file);
+                });
+            }
+
+            return this._cachedBudgetFile.Value;
+        }
+        #endregion
     }
 }

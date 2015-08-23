@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,12 +11,9 @@ namespace Ynab
     public class Budget
     {
         private readonly IFileSystem _fileSystem;
-
-        private bool _hasCachedRegisteredDevices;
-        private IList<RegisteredDevice> _cachedRegisteredDevices
-            ;
-        private bool _hasCachedDataFolderPath;
-        private string _cachedDataFolderPath;
+        
+        private Lazy<Task<IList<RegisteredDevice>>> _cachedRegisteredDevices;
+        private Lazy<Task<string>> _cachedDataFolderPath;
 
         public string BudgetName { get; }
         public string BudgetPath { get; }
@@ -28,26 +26,28 @@ namespace Ynab
             this.BudgetPath = budgetPath;
         }
 
-        public async Task<IList<RegisteredDevice>> GetRegisteredDevicesAsync()
+        public Task<IList<RegisteredDevice>> GetRegisteredDevicesAsync()
         {
-            if (this._hasCachedRegisteredDevices == false)
-            { 
-                var dataFolderPath = await this.GetDataFolderPathAsync();
-
-                this._cachedRegisteredDevices = new List<RegisteredDevice>();
-
-                foreach (var deviceFile in await this._fileSystem.GetFilesAsync(YnabPaths.DevicesFolder(dataFolderPath)))
+            if (this._cachedRegisteredDevices == null)
+            {
+                this._cachedRegisteredDevices = new Lazy<Task<IList<RegisteredDevice>>>(async () =>
                 {
-                    var deviceJson = await this._fileSystem.ReadFileAsync(deviceFile);
-                    var device = JObject.Parse(deviceJson);
+                    var dataFolderPath = await this.GetDataFolderPathAsync();
 
-                    this._cachedRegisteredDevices.Add(new RegisteredDevice(this._fileSystem, this, device));
-                }
+                    var result = new List<RegisteredDevice>();
 
-                this._hasCachedRegisteredDevices = true;
+                    foreach (var deviceFile in await this._fileSystem.GetFilesAsync(YnabPaths.DevicesFolder(dataFolderPath)))
+                    {
+                        var deviceJson = await this._fileSystem.ReadFileAsync(deviceFile);
+                        var device = JObject.Parse(deviceJson);
+
+                        result.Add(new RegisteredDevice(this._fileSystem, this, device));
+                    }
+
+                    return result;
+                });
             }
-
-            return this._cachedRegisteredDevices;
+            return this._cachedRegisteredDevices.Value;
         }
         
         public async Task<RegisteredDevice> RegisterDevice(string deviceName)
@@ -69,7 +69,7 @@ namespace Ynab
                 { "friendlyName", deviceName },
                 { "shortDeviceId", deviceId },
                 { "hasFullKnowledge", false },
-                { "knowledge", Knowledge.CreateKnowledgeForNewDevice(alreadyRegisteredDevices.First(f => f.HasFullKnowledge).GetKnowledgeString(), deviceId) },
+                { "knowledge", Knowledge.CreateKnowledgeForNewDevice(alreadyRegisteredDevices.First(f => f.HasFullKnowledge).KnowledgeString, deviceId) },
                 { "deviceGUID", deviceGuid },
                 { "knowledgeInFullBudgetFile", null },
                 { "YNABVersion", Constants.YnabVersion },
@@ -84,7 +84,7 @@ namespace Ynab
             await this._fileSystem.CreateDirectoryAsync(YnabPaths.DeviceFolder(dataFolderPath, deviceGuid));
             
             var result = new RegisteredDevice(this._fileSystem, this, json);
-            this._cachedRegisteredDevices.Add(result);
+            (await this.GetRegisteredDevicesAsync()).Add(result);
 
             return result;
         }
@@ -105,22 +105,23 @@ namespace Ynab
             return nextDeviceIdAsChar.ToString();
         }
 
-        internal async Task<string> GetDataFolderPathAsync()
+        internal Task<string> GetDataFolderPathAsync()
         {
-            if (this._hasCachedDataFolderPath == false)
-            { 
-                var budgetFilePath = YnabPaths.BudgetMetadataFile(this.BudgetPath);
+            if (this._cachedDataFolderPath == null)
+            {
+                this._cachedDataFolderPath = new Lazy<Task<string>>(async () =>
+                {
+                    var budgetFilePath = YnabPaths.BudgetMetadataFile(this.BudgetPath);
 
-                var budgetJson = await this._fileSystem.ReadFileAsync(budgetFilePath);
-                var budget = JObject.Parse(budgetJson);
+                    var budgetJson = await this._fileSystem.ReadFileAsync(budgetFilePath);
+                    var budget = JObject.Parse(budgetJson);
 
-                var relativeDataFolderPath = budget.Value<string>("relativeDataFolderName");
-                this._cachedDataFolderPath = YnabPaths.DataFolder(this.BudgetPath, relativeDataFolderPath);
-
-                this._hasCachedDataFolderPath = true;
+                    var relativeDataFolderPath = budget.Value<string>("relativeDataFolderName");
+                    return YnabPaths.DataFolder(this.BudgetPath, relativeDataFolderPath);
+                });
             }
 
-            return this._cachedDataFolderPath;
+            return this._cachedDataFolderPath.Value;
         }
     }
 }

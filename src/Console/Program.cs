@@ -8,6 +8,7 @@ using Ynab;
 using Ynab.Desktop;
 using Ynab.DeviceActions;
 using Ynab.Dropbox;
+using Ynab.Items;
 
 namespace Console
 {
@@ -29,9 +30,11 @@ namespace Console
             var budgets = await api.GetBudgetsAsync();
 
             var testBudget = budgets.First(f => f.BudgetName == "Test-Budget");
-            var devices = await testBudget.GetRegisteredDevicesAsync();
 
             var registeredDevice = await testBudget.RegisterDevice(Environment.MachineName);
+
+            var allDevices = await testBudget.GetRegisteredDevicesAsync();
+            var fullKnowledgeDevice = allDevices.First(f => f.HasFullKnowledge); 
 
             var createPayee = new CreatePayeeDeviceAction
             {
@@ -40,10 +43,10 @@ namespace Console
             var createTransaction = new CreateTransactionDeviceAction
             {
                 Amount = -20.0m,
-                AccountId = "ACCOUNT-ID-1",
-                CategoryId = "CATEGORY-ID-1",
+                Account = (await fullKnowledgeDevice.GetAccountsAsync()).First(f => f.Name == "Geldbeutel"),
+                Category = new Category(),
                 Memo = "#Mittagspause",
-                PayeeId = createPayee.Id
+                Payee = createPayee
             };
 
             await registeredDevice.ExecuteActions(createPayee, createTransaction);

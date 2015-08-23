@@ -12,10 +12,10 @@ namespace Ynab.DeviceActions
         }
 
         public string Id { get; }
-        public string AccountId { get; set; }
+        public IHaveAccountId Account { get; set; }
         public decimal Amount { get; set; }
-        public string CategoryId { get; set; }
-        public string PayeeId { get; set; }
+        public IHaveCategoryId Category { get; set; }
+        public IHavePayeeId Payee { get; set; }
         public string Memo { get; set; }
 
         public JObject ToJsonForYdiff(string deviceId, int knowledgeNumber)
@@ -23,9 +23,9 @@ namespace Ynab.DeviceActions
             return new JObject
             {
                 { "accepted", true },
-                { "accountId", this.AccountId },
+                { "accountId", this.Account.Id },
                 { "amount", this.Amount },
-                { "categoryId", this.CategoryId },
+                { "categoryId", this.Category.Id },
                 { "checkNumber", null },
                 { "cleared", "Cleared" },
                 { "date", DateTime.Today.ToString("yyyy-MM-dd") },
@@ -38,7 +38,7 @@ namespace Ynab.DeviceActions
                 { "isTombstone", false },
                 { "madeWithKnowledge", null },
                 { "memo", this.Memo },
-                { "payeeId", this.PayeeId },
+                { "payeeId", this.Payee.Id },
                 { "subTransactions", new JArray() },
                 { "targetAccountId", null },
                 { "transferTransactionId", null }

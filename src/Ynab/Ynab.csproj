@@ -39,10 +39,16 @@
     <Compile Include="DeviceActions\CreatePayeeDeviceAction.cs" />
     <Compile Include="DeviceActions\CreateTransactionDeviceAction.cs" />
     <Compile Include="DeviceActions\IDeviceAction.cs" />
+    <Compile Include="DeviceActions\IHaveAccountId.cs" />
+    <Compile Include="DeviceActions\IHaveCategoryId.cs" />
+    <Compile Include="DeviceActions\IHavePayeeId.cs" />
     <Compile Include="Files\IFileSystem.cs" />
     <Compile Include="Helpers\EntityId.cs" />
     <Compile Include="Helpers\Knowledge.cs" />
     <Compile Include="Helpers\YnabPaths.cs" />
+    <Compile Include="Items\Account.cs" />
+    <Compile Include="Items\Category.cs" />
+    <Compile Include="Items\Payee.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RegisteredDevice.cs" />
     <Compile Include="YnabApi.cs" />

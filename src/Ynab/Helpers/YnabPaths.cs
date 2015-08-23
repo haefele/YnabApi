@@ -44,5 +44,10 @@ namespace Ynab.Helpers
         {
             return Path.Combine(dataFolderPath, deviceGuid, $"{startVersion}_{shortDeviceId}-{currentKnowledge}.ydiff");
         }
+
+        public static string BudgetFile(string deviceFolder)
+        {
+            return Path.Combine(deviceFolder, "Budget.yfull");
+        }
     }
 }

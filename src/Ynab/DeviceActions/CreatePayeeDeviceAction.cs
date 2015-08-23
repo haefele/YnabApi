@@ -3,7 +3,7 @@ using Ynab.Helpers;
 
 namespace Ynab.DeviceActions
 {
-    public class CreatePayeeDeviceAction : IDeviceAction
+    public class CreatePayeeDeviceAction : IDeviceAction, IHavePayeeId
     {
         public CreatePayeeDeviceAction()
         {
