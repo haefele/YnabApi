@@ -1,8 +1,8 @@
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 
-namespace Ynab.Items
+namespace Ynab.DeviceActions
 {
-    public interface IYnabItem
+    public interface IDeviceAction
     {
         string Id { get; }
         JObject ToJsonForYdiff(string deviceId, int knowledgeNumber);

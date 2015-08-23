@@ -1,17 +1,17 @@
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using Ynab.Helpers;
 
-namespace Ynab.Items
+namespace Ynab.DeviceActions
 {
-    public class Payee : IYnabItem
+    public class CreatePayeeDeviceAction : IDeviceAction
     {
-        public Payee()
+        public CreatePayeeDeviceAction()
         {
             this.Id = EntityId.CreateNew();
         }
 
-        public string Name { get; set; }
         public string Id { get; }
+        public string Name { get; set; }
 
         public JObject ToJsonForYdiff(string deviceId, int knowledgeNumber)
         {

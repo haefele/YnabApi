@@ -2,9 +2,9 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
+using Ynab.DeviceActions;
 using Ynab.Files;
 using Ynab.Helpers;
-using Ynab.Items;
 
 namespace Ynab
 {
@@ -40,13 +40,13 @@ namespace Ynab
             return this._device.Value<string>("knowledge");
         }
         
-        public async Task InsertItems(params IYnabItem[] items)
+        public async Task ExecuteActions(params IDeviceAction[] actions)
         {
             var startKnowledge = this.CurrentKnowledge;
 
-            JArray itemsJsonArray = new JArray(from item in items
+            JArray itemsJsonArray = new JArray(from action in actions
                                                let knowledge = ++this.CurrentKnowledge
-                                               select item.ToJsonForYdiff(this.ShortDeviceId, knowledge));
+                                               select action.ToJsonForYdiff(this.ShortDeviceId, knowledge));
             
             var startVersion = Knowledge.CreateKnowledgeForYdiff(this.GetKnowledgeString(), this.ShortDeviceId, startKnowledge);
             var endVersion = Knowledge.CreateKnowledgeForYdiff(this.GetKnowledgeString(), this.ShortDeviceId, this.CurrentKnowledge);

@@ -1,23 +1,22 @@
-using System;
+﻿using System;
 using Newtonsoft.Json.Linq;
 using Ynab.Helpers;
 
-namespace Ynab.Items
+namespace Ynab.DeviceActions
 {
-    public class Transaction : IYnabItem
+    public class CreateTransactionDeviceAction : IDeviceAction
     {
-        public Transaction()
+        public CreateTransactionDeviceAction()
         {
             this.Id = EntityId.CreateNew();
         }
 
+        public string Id { get; }
         public string AccountId { get; set; }
         public decimal Amount { get; set; }
         public string CategoryId { get; set; }
         public string PayeeId { get; set; }
         public string Memo { get; set; }
-
-        public string Id { get; }
 
         public JObject ToJsonForYdiff(string deviceId, int knowledgeNumber)
         {
