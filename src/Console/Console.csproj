@@ -51,9 +51,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Ynab.Desktop\Ynab.Desktop.csproj">
+    <ProjectReference Include="..\Ynab.Desktop\Ynab.Desktop %28Desktop%29.csproj">
       <Project>{E33E9289-14A0-463D-8D26-A914102AE306}</Project>
-      <Name>Ynab.Desktop</Name>
+      <Name>Ynab.Desktop %28Desktop%29</Name>
     </ProjectReference>
     <ProjectReference Include="..\Ynab\Ynab.csproj">
       <Project>{1e107947-52aa-458f-a073-c7acffe540e2}</Project>

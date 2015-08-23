@@ -5,7 +5,7 @@ VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Console", "Console\Console.csproj", "{D5C5922C-3BC0-408F-98AE-BAA7D43DD799}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ynab.Desktop", "Ynab.Desktop\Ynab.Desktop.csproj", "{E33E9289-14A0-463D-8D26-A914102AE306}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ynab.Desktop (Desktop)", "Ynab.Desktop\Ynab.Desktop (Desktop).csproj", "{E33E9289-14A0-463D-8D26-A914102AE306}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ynab", "Ynab\Ynab.csproj", "{1E107947-52AA-458F-A073-C7ACFFE540E2}"
 EndProject
