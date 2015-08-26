@@ -8,4 +8,4 @@ $nuspecPath = $root + "\nuget\Ynab.nuspec";
 $content.package.metadata.version = $versionAsString;
 $content.Save($nuspecPath);
 
-& $root\nuget\nuget.exe pack $nuspecPath;
+& nuget pack $nuspecPath;
