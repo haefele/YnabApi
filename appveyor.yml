@@ -1,0 +1,28 @@
+version: 0.9.{build}
+branches:
+  only:
+  - master
+os: Visual Studio 2015
+configuration: Release
+shallow_clone: true
+assembly_info:
+  patch: true
+  file: '**\AssemblyInfo.*'
+  assembly_version: '{version}'
+  assembly_file_version: '{version}'
+  assembly_informational_version: '{version}'
+before_build:
+- ps: nuget restore src/
+build:
+  verbosity: normal
+after_test:
+- ps: .\nuget\pack.ps1
+artifacts:
+- path: '*.nupkg'
+  name: Nuget Packages
+deploy:
+- provider: NuGet
+  api_key:
+    secure: uUjOB53mSd3cAJc0P21K6jHV5tLlgHp0B/u7W29xu6YDz/IV+QqgzzBRRKwOAE3L
+  on:
+    branch: master
