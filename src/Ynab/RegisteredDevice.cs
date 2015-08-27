@@ -17,6 +17,7 @@ namespace Ynab
 
         private Lazy<Task<IList<Payee>>> _cachedPayees;
         private Lazy<Task<IList<Account>>> _cachedAccounts;
+        private Lazy<Task<IList<Category>>> _cachedCategories;
         private Lazy<Task<JObject>> _cachedBudgetFile; 
 
         public RegisteredDevice(IFileSystem fileSystem, Budget budget, JObject device)
@@ -83,6 +84,32 @@ namespace Ynab
             }
 
             return this._cachedAccounts.Value;
+        }
+
+        public Task<IList<Category>> GetCategoriesAsync()
+        {
+            if (this._cachedCategories == null)
+            {
+                this._cachedCategories = new Lazy<Task<IList<Category>>>(async () =>
+                {
+                    if (this.HasFullKnowledge == false)
+                        return new List<Category>();
+
+                    var budgetFile = await this.GetBudgetFileAsync();
+
+                    return budgetFile
+                        .Value<JArray>("masterCategories")
+                        .Values<JObject>()
+                        .SelectMany(masterCategory => masterCategory
+                            .Value<JArray>("subCategories")
+                            .Values<JObject>()
+                            .Select(f => new Category(f, masterCategory)))
+                        .Where(f => f.Id != "MasterCategory/__Hidden__")
+                        .ToList();
+                });
+            }
+
+            return this._cachedCategories.Value;
         }
         
         public async Task ExecuteActions(params IDeviceAction[] actions)
