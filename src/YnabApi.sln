@@ -11,7 +11,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YnabApi.Dropbox", "YnabApi.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YnabApi.Universal", "YnabApi.Universal\YnabApi.Universal.csproj", "{B5732BA7-4D2D-4FD2-B0F3-EE7FFFAFE8CD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YnabApi.Tests.Console", "YnabApi.Tests.Console\YnabApi.Tests.Console.csproj", "{632D3068-C873-4797-A51A-86F5730B0A81}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{59904062-15D9-4A4D-A0A0-264CF5A13541}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YnabApi.Tests.Console", "Tests\YnabApi.Tests.Console\YnabApi.Tests.Console.csproj", "{632D3068-C873-4797-A51A-86F5730B0A81}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -108,5 +110,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{632D3068-C873-4797-A51A-86F5730B0A81} = {59904062-15D9-4A4D-A0A0-264CF5A13541}
 	EndGlobalSection
 EndGlobal
