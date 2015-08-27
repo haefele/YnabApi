@@ -26,7 +26,7 @@ namespace Console
             var dropboxFileSystem = new DropboxFileSystem("");
             var desktopFileSystem = new DesktopFileSystem();
 
-            YnabApi api = new YnabApi(dropboxFileSystem);
+            YnabApi api = new YnabApi(desktopFileSystem);
             var budgets = await api.GetBudgetsAsync();
 
             var testBudget = budgets.First(f => f.BudgetName == "Test-Budget");
@@ -44,7 +44,7 @@ namespace Console
             {
                 Amount = -20.0m,
                 Account = (await fullKnowledgeDevice.GetAccountsAsync()).First(f => f.Name == "Geldbeutel"),
-                Category = new Category(),
+                Category = null,
                 Memo = "#Mittagspause",
                 Payee = createPayee
             };
