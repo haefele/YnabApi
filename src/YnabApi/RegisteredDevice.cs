@@ -104,7 +104,7 @@ namespace YnabApi
                             .Value<JArray>("subCategories")
                             .Values<JObject>()
                             .Select(f => new Category(f, masterCategory)))
-                        .Where(f => f.Id != "MasterCategory/__Hidden__")
+                        .Where(f => f.MasterId != "MasterCategory/__Hidden__")
                         .ToList();
                 });
             }
