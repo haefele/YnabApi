@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -13,22 +15,43 @@ namespace YnabApi.Dropbox
     public class DropboxFileSystem : IFileSystem
     {
         private readonly string _accessToken;
+        private readonly ConcurrentDictionary<string, Tuple<string, string>> _fileToContentAndEtagCache;
 
         public DropboxFileSystem(string accessToken)
         {
             this._accessToken = accessToken;
+            this._fileToContentAndEtagCache = new ConcurrentDictionary<string, Tuple<string, string>>();
         }
 
         public async Task<string> ReadFileAsync(string file)
         {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"https://content.dropboxapi.com/1/files/auto/{file}");
+
+            Tuple<string, string> cached;
+            if (this._fileToContentAndEtagCache.TryGetValue(file, out cached))
+            {
+                request.Headers.IfNoneMatch.Add(new EntityTagHeaderValue(cached.Item1));
+            }
+
             HttpResponseMessage result = await this
                 .GetHttpClient()
-                .GetAsync($"https://content.dropboxapi.com/1/files/auto/{file}");
+                .SendAsync(request);
+
+            if (result.StatusCode == HttpStatusCode.NotModified)
+                return cached.Item2;
 
             if (result.StatusCode != HttpStatusCode.OK)
                 return string.Empty;
 
-            return await result.Content.ReadAsStringAsync();
+            string etag = result.Headers.GetValues("Etag").First();
+            string content = await result.Content.ReadAsStringAsync();
+
+            if (string.IsNullOrWhiteSpace(etag) == false)
+            {
+                this._fileToContentAndEtagCache[file] = Tuple.Create(etag, content);
+            }
+
+            return content;
         }
 
         public async Task<IList<string>> GetFilesAsync(string directory)
