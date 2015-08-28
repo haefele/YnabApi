@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using YnabApi.Files;
@@ -14,50 +10,27 @@ namespace YnabApi.Dropbox
 {
     public class DropboxFileSystem : IFileSystem
     {
-        private readonly string _accessToken;
-        private readonly ConcurrentDictionary<string, Tuple<string, string>> _fileToContentAndEtagCache;
+        private readonly HttpClient _client;
 
         public DropboxFileSystem(string accessToken)
         {
-            this._accessToken = accessToken;
-            this._fileToContentAndEtagCache = new ConcurrentDictionary<string, Tuple<string, string>>();
+            this._client = new HttpClient(new CachingMessageHandler(new AccessTokenMessageHandler(accessToken, new HttpClientHandler())));
         }
 
         public async Task<string> ReadFileAsync(string file)
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, $"https://content.dropboxapi.com/1/files/auto/{file}");
-
-            Tuple<string, string> cached;
-            if (this._fileToContentAndEtagCache.TryGetValue(file, out cached))
-            {
-                request.Headers.IfNoneMatch.Add(new EntityTagHeaderValue(cached.Item1));
-            }
-
-            HttpResponseMessage result = await this
-                .GetHttpClient()
-                .SendAsync(request);
-
-            if (result.StatusCode == HttpStatusCode.NotModified)
-                return cached.Item2;
-
+            HttpResponseMessage result = await this._client
+                .GetAsync($"https://content.dropboxapi.com/1/files/auto/{file}");
+            
             if (result.StatusCode != HttpStatusCode.OK)
                 return string.Empty;
-
-            string etag = result.Headers.GetValues("Etag").First();
-            string content = await result.Content.ReadAsStringAsync();
-
-            if (string.IsNullOrWhiteSpace(etag) == false)
-            {
-                this._fileToContentAndEtagCache[file] = Tuple.Create(etag, content);
-            }
-
-            return content;
+            
+            return await result.Content.ReadAsStringAsync();
         }
 
         public async Task<IList<string>> GetFilesAsync(string directory)
         {
-            HttpResponseMessage result = await this
-                .GetHttpClient()
+            HttpResponseMessage result = await this._client
                 .GetAsync($"https://api.dropboxapi.com/1/metadata/auto/{directory}");
 
             if (result.StatusCode != HttpStatusCode.OK)
@@ -77,37 +50,13 @@ namespace YnabApi.Dropbox
 
         public Task WriteFileAsync(string file, string content)
         {
-            return this
-                .GetHttpClient()
+            return this._client
                 .PutAsync($"https://content.dropboxapi.com/1/files_put/auto/{file}", new StringContent(content));
         }
 
         public Task CreateDirectoryAsync(string directory)
         {
             return Task.FromResult((object)null);
-        }
-
-        private HttpClient GetHttpClient()
-        {
-            var client = new HttpClient(new AccessTokenMessageHandler(this._accessToken, new HttpClientHandler()));
-            return client;
-        }
-    }
-
-    internal class AccessTokenMessageHandler : DelegatingHandler
-    {
-        private readonly string _accessToken;
-
-        public AccessTokenMessageHandler(string accessToken, HttpMessageHandler innerHandler) : base(innerHandler)
-        {
-            this._accessToken = accessToken;
-        }
-
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", this._accessToken);
-
-            return base.SendAsync(request, cancellationToken);
         }
     }
 }
