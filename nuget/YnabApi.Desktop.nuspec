@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>YnabApi.Desktop</id>
+    <version></version>
+    <authors>Daniel Haefele</authors>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>A c# api to work with the ynab files. This package provides a IFileSystem implementation that accesses files and directories on your desktop computer.</description>
+    <dependencies>
+      <dependency id="YnabApi" version="" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="..\src\YnabApi.Desktop\bin\Release\YnabApi.Desktop.dll" target="lib\net45" />
+  </files>
+</package>

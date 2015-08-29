@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>YnabApi.Universal</id>
+    <version></version>
+    <authors>Daniel Haefele</authors>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>A c# api to work with the ynab files. This package provides a IFileSystem implementation that accesses files and directories in a StorageFolder.</description>
+    <dependencies>
+      <dependency id="YnabApi" version="" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="..\src\YnabApi.Universal\bin\Release\YnabApi.Universal.dll" target="lib\netcore45" />
+  </files>
+</package>
