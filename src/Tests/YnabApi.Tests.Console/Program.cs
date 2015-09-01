@@ -22,12 +22,12 @@ namespace YnabApi.Tests.Console
             var dropboxFileSystem = new DropboxFileSystem("");
             var desktopFileSystem = new DesktopFileSystem();
 
-            YnabApi api = new YnabApi(desktopFileSystem);
+            YnabApi api = new YnabApi(dropboxFileSystem);
             var budgets = await api.GetBudgetsAsync();
 
             var testBudget = budgets.First(f => f.BudgetName == "Test-Budget");
 
-            var registeredDevice = await testBudget.RegisterDevice(Environment.MachineName);
+            var registeredDevice = await testBudget.RegisterDevice("My-Test-Device");
 
             var allDevices = await testBudget.GetRegisteredDevicesAsync();
             var fullKnowledgeDevice = allDevices.First(f => f.HasFullKnowledge);
