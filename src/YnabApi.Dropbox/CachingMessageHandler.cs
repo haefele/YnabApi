@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -36,10 +37,14 @@ namespace YnabApi.Dropbox
                 return response;
             }
 
-            string etag = response.Headers.GetValues("Etag").First();
-            if (string.IsNullOrWhiteSpace(etag) == false)
-            { 
-                this._cache[Tuple.Create(request.Method, request.RequestUri)] = Tuple.Create(etag, await response.Content.ReadAsByteArrayAsync());
+            IEnumerable<string> allEtags;
+            if (response.Headers.TryGetValues("Etag", out allEtags))
+            {
+                string etag = allEtags.FirstOrDefault();
+                if (string.IsNullOrWhiteSpace(etag) == false)
+                { 
+                    this._cache[Tuple.Create(request.Method, request.RequestUri)] = Tuple.Create(etag, await response.Content.ReadAsByteArrayAsync());
+                }
             }
 
             return response;
