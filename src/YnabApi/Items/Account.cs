@@ -19,5 +19,10 @@ namespace YnabApi.Items
         public string Id { get; }
         public string Name { get; }
         public bool OnBudget { get; }
+
+        public override string ToString()
+        {
+            return this.Name;
+        }
     }
 }

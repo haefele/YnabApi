@@ -25,5 +25,10 @@ namespace YnabApi.Items
 
         public string MasterId { get; }
         public string MasterName { get; }
+
+        public override string ToString()
+        {
+            return $"{this.MasterName} - {this.Name}";
+        }
     }
 }
