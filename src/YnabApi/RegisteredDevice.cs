@@ -12,7 +12,7 @@ namespace YnabApi
 {
     public class RegisteredDevice
     {
-        private readonly IFileSystem _fileSystem;
+        private readonly YnabApiSettings _settings;
         private readonly JObject _device;
 
         private Lazy<Task<IList<Payee>>> _cachedPayees;
@@ -20,9 +20,9 @@ namespace YnabApi
         private Lazy<Task<IList<Category>>> _cachedCategories;
         private Lazy<Task<JObject>> _cachedBudgetFile; 
 
-        public RegisteredDevice(IFileSystem fileSystem, Budget budget, JObject device)
+        public RegisteredDevice(YnabApiSettings settings, Budget budget, JObject device)
         {
-            this._fileSystem = fileSystem;
+            this._settings = settings;
             this._device = device;
 
             this.Budget = budget;
@@ -46,7 +46,7 @@ namespace YnabApi
         
         public Task<IList<Payee>> GetPayeesAsync()
         {
-            if (this._cachedPayees == null)
+            if (this._cachedPayees == null || this._settings.CacheRegisteredDeviceData == false)
             {
                 this._cachedPayees = new Lazy<Task<IList<Payee>>>(async () =>
                 {
@@ -67,7 +67,7 @@ namespace YnabApi
 
         public Task<IList<Account>> GetAccountsAsync()
         {
-            if (this._cachedAccounts == null)
+            if (this._cachedAccounts == null || this._settings.CacheRegisteredDeviceData == false)
             {
                 this._cachedAccounts = new Lazy<Task<IList<Account>>>(async () =>
                 {
@@ -88,7 +88,7 @@ namespace YnabApi
 
         public Task<IList<Category>> GetCategoriesAsync()
         {
-            if (this._cachedCategories == null)
+            if (this._cachedCategories == null || this._settings.CacheRegisteredDeviceData == false)
             {
                 this._cachedCategories = new Lazy<Task<IList<Category>>>(async () =>
                 {
@@ -137,19 +137,19 @@ namespace YnabApi
                 { "items", itemsJsonArray }
             };
 
-            await this._fileSystem.WriteFileAsync(YnabPaths.YdiffFile(dataPath, this.DeviceGuid, startVersion, this.ShortDeviceId, this.CurrentKnowledge), json.ToString());
+            await this._settings.FileSystem.WriteFileAsync(YnabPaths.YdiffFile(dataPath, this.DeviceGuid, startVersion, this.ShortDeviceId, this.CurrentKnowledge), json.ToString());
 
             this.KnowledgeString = endVersion;
             this._device["knowledge"] = endVersion;
             var deviceFilePath = YnabPaths.DeviceFile(dataPath, this.ShortDeviceId);
-            await this._fileSystem.WriteFileAsync(deviceFilePath, this._device.ToString());
+            await this._settings.FileSystem.WriteFileAsync(deviceFilePath, this._device.ToString());
         }
 
 
         #region Private Methods
         private Task<JObject> GetBudgetFileAsync()
         {
-            if (this._cachedBudgetFile == null)
+            if (this._cachedBudgetFile == null || this._settings.CacheRegisteredDeviceData == false)
             {
                 this._cachedBudgetFile = new Lazy<Task<JObject>>(async () =>
                 {
@@ -157,7 +157,7 @@ namespace YnabApi
                         throw new NotSupportedException("Accessing the budget file only works if the device has full budget knowledge. In this case, it doesn't.");
 
                     var filePath = YnabPaths.BudgetFile(YnabPaths.DeviceFolder(await this.Budget.GetDataFolderPathAsync(), this.DeviceGuid));
-                    string file = await this._fileSystem.ReadFileAsync(filePath);
+                    string file = await this._settings.FileSystem.ReadFileAsync(filePath);
 
                     return JObject.Parse(file);
                 });

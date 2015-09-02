@@ -10,7 +10,7 @@ namespace YnabApi
 {
     public class Budget
     {
-        private readonly IFileSystem _fileSystem;
+        private readonly YnabApiSettings _settings;
         
         private Lazy<Task<IList<RegisteredDevice>>> _cachedRegisteredDevices;
         private Lazy<Task<string>> _cachedDataFolderPath;
@@ -18,9 +18,9 @@ namespace YnabApi
         public string BudgetName { get; }
         public string BudgetPath { get; }
 
-        public Budget(IFileSystem fileSystem, string budgetName, string budgetPath)
+        public Budget(YnabApiSettings settings, string budgetName, string budgetPath)
         {
-            this._fileSystem = fileSystem;
+            this._settings = settings;
 
             this.BudgetName = budgetName;
             this.BudgetPath = budgetPath;
@@ -28,7 +28,7 @@ namespace YnabApi
 
         public Task<IList<RegisteredDevice>> GetRegisteredDevicesAsync()
         {
-            if (this._cachedRegisteredDevices == null)
+            if (this._cachedRegisteredDevices == null || this._settings.CacheRegisteredDevices == false)
             {
                 this._cachedRegisteredDevices = new Lazy<Task<IList<RegisteredDevice>>>(async () =>
                 {
@@ -36,12 +36,12 @@ namespace YnabApi
 
                     var result = new List<RegisteredDevice>();
 
-                    foreach (var deviceFile in await this._fileSystem.GetFilesAsync(YnabPaths.DevicesFolder(dataFolderPath)))
+                    foreach (var deviceFile in await this._settings.FileSystem.GetFilesAsync(YnabPaths.DevicesFolder(dataFolderPath)))
                     {
-                        var deviceJson = await this._fileSystem.ReadFileAsync(deviceFile);
+                        var deviceJson = await this._settings.FileSystem.ReadFileAsync(deviceFile);
                         var device = JObject.Parse(deviceJson);
 
-                        result.Add(new RegisteredDevice(this._fileSystem, this, device));
+                        result.Add(new RegisteredDevice(this._settings, this, device));
                     }
 
                     return result;
@@ -80,10 +80,10 @@ namespace YnabApi
             var dataFolderPath = await this.GetDataFolderPathAsync();
             var deviceFilePath = YnabPaths.DeviceFile(dataFolderPath, deviceId);
 
-            await this._fileSystem.WriteFileAsync(deviceFilePath, json.ToString());
-            await this._fileSystem.CreateDirectoryAsync(YnabPaths.DeviceFolder(dataFolderPath, deviceGuid));
+            await this._settings.FileSystem.WriteFileAsync(deviceFilePath, json.ToString());
+            await this._settings.FileSystem.CreateDirectoryAsync(YnabPaths.DeviceFolder(dataFolderPath, deviceGuid));
             
-            var result = new RegisteredDevice(this._fileSystem, this, json);
+            var result = new RegisteredDevice(this._settings, this, json);
             (await this.GetRegisteredDevicesAsync()).Add(result);
 
             return result;
@@ -113,7 +113,7 @@ namespace YnabApi
                 {
                     var budgetFilePath = YnabPaths.BudgetMetadataFile(this.BudgetPath);
 
-                    var budgetJson = await this._fileSystem.ReadFileAsync(budgetFilePath);
+                    var budgetJson = await this._settings.FileSystem.ReadFileAsync(budgetFilePath);
                     var budget = JObject.Parse(budgetJson);
 
                     var relativeDataFolderPath = budget.Value<string>("relativeDataFolderName");

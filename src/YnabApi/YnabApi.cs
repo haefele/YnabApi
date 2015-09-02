@@ -11,24 +11,24 @@ namespace YnabApi
 {
     public class YnabApi
     {
-        private readonly IFileSystem _fileSystem;
+        private readonly YnabApiSettings _settings;
 
         private Lazy<Task<IList<Budget>>> _cachedBudgets; 
 
-        public YnabApi(IFileSystem fileSystem)
+        public YnabApi(YnabApiSettings settings)
         {
-            this._fileSystem = fileSystem;
+            this._settings = settings;
         }
 
         public Task<IList<Budget>> GetBudgetsAsync()
         {
-            if (this._cachedBudgets == null)
+            if (this._cachedBudgets == null || this._settings.CacheBudgets == false)
             {
                 this._cachedBudgets = new Lazy<Task<IList<Budget>>>(async () =>
                 {
                     string ynabSettingsFilePath = YnabPaths.YnabSettingsFile();
 
-                    var ynabSettingsJson = await this._fileSystem.ReadFileAsync(ynabSettingsFilePath);
+                    var ynabSettingsJson = await this._settings.FileSystem.ReadFileAsync(ynabSettingsFilePath);
                     var ynabSettings = JObject.Parse(ynabSettingsJson);
 
                     string relativeBudgetsFolder = ynabSettings.Value<string>("relativeDefaultBudgetsFolder");
@@ -37,7 +37,7 @@ namespace YnabApi
                         .Value<JArray>("relativeKnownBudgets")
                         .Values()
                         .Select(f => f.Value<string>())
-                        .Select(f => new Budget(this._fileSystem, this.ExtractBudgetName(f, relativeBudgetsFolder), f))
+                        .Select(f => new Budget(this._settings, this.ExtractBudgetName(f, relativeBudgetsFolder), f))
                         .ToArray();
                 });
             }
