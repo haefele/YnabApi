@@ -36,6 +36,7 @@
   <ItemGroup>
     <Compile Include="Budget.cs" />
     <Compile Include="Constants.cs" />
+    <Compile Include="DeviceActions\ChangeMonthlyBudgetAction.cs" />
     <Compile Include="DeviceActions\CreatePayeeDeviceAction.cs" />
     <Compile Include="DeviceActions\CreateTransactionDeviceAction.cs" />
     <Compile Include="DeviceActions\IDeviceAction.cs" />
