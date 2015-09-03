@@ -100,10 +100,20 @@ namespace YnabApi
                     return budgetFile
                         .Value<JArray>("masterCategories")
                         .Values<JObject>()
-                        .SelectMany(masterCategory => masterCategory
-                            .Value<JArray>("subCategories")
-                            .Values<JObject>()
-                            .Select(f => new Category(f, masterCategory)))
+                        .SelectMany(masterCategory =>
+                        {
+                            var subCategories = masterCategory
+                                .Value<JArray>("subCategories");
+
+                            if (subCategories == null)
+                                return new List<Category>();
+
+                            return subCategories?
+                                .Values<JObject>()
+                                .Where(f => f.Value<bool>("isTombstone") == false)
+                                .Select(f => new Category(f, masterCategory));
+                        })
+                        .Where(f => f != null)
                         .Where(f => f.MasterId != "MasterCategory/__Hidden__")
                         .ToList();
                 });
