@@ -98,7 +98,7 @@ namespace YnabApi
 
                     var budgetFile = await this.GetBudgetFileAsync();
 
-                    return budgetFile
+                    var allCategories = budgetFile
                         .Value<JArray>("masterCategories")
                         .Values<JObject>()
                         .SelectMany(masterCategory =>
@@ -111,12 +111,15 @@ namespace YnabApi
 
                             return subCategories?
                                 .Values<JObject>()
-                                .Where(f => f.Value<bool>("isTombstone") == false)
                                 .Select(f => new Category(f, masterCategory));
                         })
-                        .Where(f => f != null)
-                        .Where(f => f.MasterId != "MasterCategory/__Hidden__")
                         .ToList();
+                    
+                    allCategories.Add(new Category("Category/__ImmediateIncome__", "Income"));
+                    allCategories.Add(new Category("Category/__DeferredIncome__", "Income"));
+                    allCategories.Add(new Category("Category/__Split__", "Split"));
+
+                    return allCategories;
                 });
             }
 
@@ -134,10 +137,14 @@ namespace YnabApi
 
                     var budgetFile = await this.GetBudgetFileAsync();
 
+                    var allAccounts = await this.GetAccountsAsync();
+                    var allCategories = await this.GetCategoriesAsync();
+                    var allPayees = await this.GetPayeesAsync();
+
                     return budgetFile
                         .Value<JArray>("transactions")
                         .Values<JObject>()
-                        .Select(f => new Transaction(f))
+                        .Select(f => new Transaction(f, allAccounts, allCategories, allPayees))
                         .ToList();
                 });
             }

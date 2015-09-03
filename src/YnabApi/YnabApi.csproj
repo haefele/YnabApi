@@ -44,6 +44,7 @@
     <Compile Include="DeviceActions\IHaveCategoryId.cs" />
     <Compile Include="DeviceActions\IHavePayeeId.cs" />
     <Compile Include="DeviceActions\IHaveTransactionId.cs" />
+    <Compile Include="Extensions\YnabExtensions.cs" />
     <Compile Include="Files\IFileSystem.cs" />
     <Compile Include="Helpers\EntityId.cs" />
     <Compile Include="Helpers\Knowledge.cs" />

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using YnabApi.Desktop;
 using YnabApi.DeviceActions;
 using YnabApi.Dropbox;
+using YnabApi.Extensions;
 
 namespace YnabApi.Tests.Console
 {
@@ -29,24 +30,19 @@ namespace YnabApi.Tests.Console
         {
             var dropboxFileSystem = new DropboxFileSystem("");
 
-            var settings = new YnabApiSettings(dropboxFileSystem);
-            settings.CacheBudgets = false;
+            var settings = new YnabApiSettings(new DesktopFileSystem());
 
             YnabApi api = new YnabApi(settings);
-
-            TimeMeasureCheckpoint();
+            
             var budgets = await api.GetBudgetsAsync();
-            TimeMeasureCheckpoint("Get Budgets: ");
+
             var testBudget = budgets.First(f => f.BudgetName == "Test-Budget");
-            TimeMeasureCheckpoint("LINQ Get Budget in Memory: ");
-            var registeredDevice = await testBudget.RegisterDevice("My-Test-Device");
-            TimeMeasureCheckpoint("Register Device: ");
+
             var allDevices = await testBudget.GetRegisteredDevicesAsync();
-            TimeMeasureCheckpoint("Get Registered Devices: ");
             var fullKnowledgeDevice = allDevices.First(f => f.HasFullKnowledge);
-            TimeMeasureCheckpoint("Get Full Knowledge Device: ");
-            await fullKnowledgeDevice.GetPayeesAsync();
-            TimeMeasureCheckpoint("Get Payees: ");
+            var categories = (await fullKnowledgeDevice.GetCategoriesAsync()).OnlyActive();
+            var transactions = await fullKnowledgeDevice.GetTransactionsAsync();
+
             //var createPayee = new CreatePayeeDeviceAction
             //{
             //    Name = "Bücherei"

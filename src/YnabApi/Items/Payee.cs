@@ -7,7 +7,7 @@ namespace YnabApi.Items
     {
         private readonly JObject _payee;
 
-        public Payee(JObject payee)
+        internal Payee(JObject payee)
         {
             this._payee = payee;
 

@@ -7,7 +7,7 @@ namespace YnabApi.Items
     {
         private readonly JObject _account;
 
-        public Account(JObject account)
+        internal Account(JObject account)
         {
             this._account = account;
 
