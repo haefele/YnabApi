@@ -18,7 +18,8 @@ namespace YnabApi
         private Lazy<Task<IList<Payee>>> _cachedPayees;
         private Lazy<Task<IList<Account>>> _cachedAccounts;
         private Lazy<Task<IList<Category>>> _cachedCategories;
-        private Lazy<Task<JObject>> _cachedBudgetFile; 
+        private Lazy<Task<IList<Transaction>>>  _cachedTransactions;
+        private Lazy<Task<JObject>> _cachedBudgetFile;
 
         public RegisteredDevice(YnabApiSettings settings, Budget budget, JObject device)
         {
@@ -97,7 +98,7 @@ namespace YnabApi
 
                     var budgetFile = await this.GetBudgetFileAsync();
 
-                    return budgetFile
+                    var allCategories = budgetFile
                         .Value<JArray>("masterCategories")
                         .Values<JObject>()
                         .SelectMany(masterCategory =>
@@ -110,16 +111,45 @@ namespace YnabApi
 
                             return subCategories?
                                 .Values<JObject>()
-                                .Where(f => f.Value<bool>("isTombstone") == false)
                                 .Select(f => new Category(f, masterCategory));
                         })
-                        .Where(f => f != null)
-                        .Where(f => f.MasterId != "MasterCategory/__Hidden__")
                         .ToList();
+                    
+                    allCategories.Add(new Category("Category/__ImmediateIncome__", "Income"));
+                    allCategories.Add(new Category("Category/__DeferredIncome__", "Income"));
+                    allCategories.Add(new Category("Category/__Split__", "Split"));
+
+                    return allCategories;
                 });
             }
 
             return this._cachedCategories.Value;
+        }
+
+        public Task<IList<Transaction>> GetTransactionsAsync()
+        {
+            if (this._cachedTransactions == null || this._settings.CacheRegisteredDeviceData == false)
+            {
+                this._cachedTransactions = new Lazy<Task<IList<Transaction>>>(async () =>
+                {
+                    if (this.HasFullKnowledge == false)
+                        return new List<Transaction>();
+
+                    var budgetFile = await this.GetBudgetFileAsync();
+
+                    var allAccounts = await this.GetAccountsAsync();
+                    var allCategories = await this.GetCategoriesAsync();
+                    var allPayees = await this.GetPayeesAsync();
+
+                    return budgetFile
+                        .Value<JArray>("transactions")
+                        .Values<JObject>()
+                        .Select(f => new Transaction(f, allAccounts, allCategories, allPayees))
+                        .ToList();
+                });
+            }
+
+            return this._cachedTransactions.Value;
         }
         
         public async Task ExecuteActions(params IDeviceAction[] actions)

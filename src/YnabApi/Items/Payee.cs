@@ -7,7 +7,7 @@ namespace YnabApi.Items
     {
         private readonly JObject _payee;
 
-        public Payee(JObject payee)
+        internal Payee(JObject payee)
         {
             this._payee = payee;
 
@@ -17,6 +17,8 @@ namespace YnabApi.Items
 
         public string Id { get; }
         public string Name { get; }
+
+        string IHavePayeeId.Id => this.Id;
 
         public override string ToString()
         {
