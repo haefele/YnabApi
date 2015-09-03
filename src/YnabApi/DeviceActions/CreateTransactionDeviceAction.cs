@@ -17,6 +17,7 @@ namespace YnabApi.DeviceActions
         public IHaveCategoryId Category { get; set; }
         public IHavePayeeId Payee { get; set; }
         public string Memo { get; set; }
+        public bool Cleared { get; set; }
 
         public JObject ToJsonForYdiff(string deviceId, int knowledgeNumber)
         {
@@ -27,7 +28,7 @@ namespace YnabApi.DeviceActions
                 { "amount", this.Amount },
                 { "categoryId", this.Category.Id },
                 { "checkNumber", null },
-                { "cleared", "Cleared" },
+                { "cleared", this.Cleared ? "Cleared" : "Uncleared" },
                 { "date", DateTime.Today.ToString("yyyy-MM-dd") },
                 { "dateEnteredFromSchedule", null },
                 { "entityId", this.Id },
