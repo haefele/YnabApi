@@ -20,6 +20,8 @@ namespace YnabApi.Items
         public string Name { get; }
         public bool OnBudget { get; }
 
+        string IHaveAccountId.Id => this.Id;
+
         public override string ToString()
         {
             return this.Name;

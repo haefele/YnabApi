@@ -26,6 +26,8 @@ namespace YnabApi.Items
         public string MasterId { get; }
         public string MasterName { get; }
 
+        string IHaveCategoryId.Id => this.Id;
+
         public override string ToString()
         {
             return $"{this.MasterName} - {this.Name}";

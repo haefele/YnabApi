@@ -18,6 +18,8 @@ namespace YnabApi.Items
         public string Id { get; }
         public string Name { get; }
 
+        string IHavePayeeId.Id => this.Id;
+
         public override string ToString()
         {
             return this.Name;
