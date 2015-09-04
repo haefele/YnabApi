@@ -39,6 +39,7 @@
     <Compile Include="DeviceActions\ChangeMonthlyBudgetAction.cs" />
     <Compile Include="DeviceActions\CreatePayeeDeviceAction.cs" />
     <Compile Include="DeviceActions\CreateTransactionDeviceAction.cs" />
+    <Compile Include="DeviceActions\DeleteTransactionDeviceAction.cs" />
     <Compile Include="DeviceActions\IDeviceAction.cs" />
     <Compile Include="DeviceActions\IHaveAccountId.cs" />
     <Compile Include="DeviceActions\IHaveCategoryId.cs" />
@@ -51,6 +52,8 @@
     <Compile Include="Helpers\YnabPaths.cs" />
     <Compile Include="Items\Account.cs" />
     <Compile Include="Items\Category.cs" />
+    <Compile Include="Items\MonthlyBudget.cs" />
+    <Compile Include="Items\MonthlyCategoryBudget.cs" />
     <Compile Include="Items\Payee.cs" />
     <Compile Include="Items\Transaction.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -19,6 +19,7 @@ namespace YnabApi
         private Lazy<Task<IList<Account>>> _cachedAccounts;
         private Lazy<Task<IList<Category>>> _cachedCategories;
         private Lazy<Task<IList<Transaction>>>  _cachedTransactions;
+        private Lazy<Task<IList<MonthlyBudget>>> _cachedMonthlyBudgets;
         private Lazy<Task<JObject>> _cachedBudgetFile;
 
         public RegisteredDevice(YnabApiSettings settings, Budget budget, JObject device)
@@ -150,6 +151,30 @@ namespace YnabApi
             }
 
             return this._cachedTransactions.Value;
+        }
+
+        public Task<IList<MonthlyBudget>> GetMonthlyBudgetsAsync()
+        {
+            if (this._cachedMonthlyBudgets == null || this._settings.CacheRegisteredDeviceData == false)
+            {
+                this._cachedMonthlyBudgets = new Lazy<Task<IList<MonthlyBudget>>>(async () =>
+                {
+                    if (this.HasFullKnowledge == false)
+                        return new List<MonthlyBudget>();
+
+                    var budgetFile = await this.GetBudgetFileAsync();
+
+                    var allCategories = await this.GetCategoriesAsync();
+
+                    return budgetFile
+                        .Value<JArray>("monthlyBudgets")
+                        .Values<JObject>()
+                        .Select(f => new MonthlyBudget(f, allCategories))
+                        .ToList();
+                });
+            }
+
+            return this._cachedMonthlyBudgets.Value;
         }
         
         public async Task ExecuteActions(params IDeviceAction[] actions)
