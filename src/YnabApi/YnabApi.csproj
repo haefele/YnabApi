@@ -51,6 +51,8 @@
     <Compile Include="Helpers\YnabPaths.cs" />
     <Compile Include="Items\Account.cs" />
     <Compile Include="Items\Category.cs" />
+    <Compile Include="Items\MonthlyBudget.cs" />
+    <Compile Include="Items\MonthlyCategoryBudget.cs" />
     <Compile Include="Items\Payee.cs" />
     <Compile Include="Items\Transaction.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

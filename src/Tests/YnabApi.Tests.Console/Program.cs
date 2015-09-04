@@ -40,8 +40,8 @@ namespace YnabApi.Tests.Console
 
             var allDevices = await testBudget.GetRegisteredDevicesAsync();
             var fullKnowledgeDevice = allDevices.First(f => f.HasFullKnowledge);
-            var categories = (await fullKnowledgeDevice.GetCategoriesAsync()).OnlyActive();
-            var transactions = await fullKnowledgeDevice.GetTransactionsAsync();
+
+            var monthlyBudgets = await fullKnowledgeDevice.GetMonthlyBudgetsAsync();
 
             //var createPayee = new CreatePayeeDeviceAction
             //{
