@@ -39,5 +39,8 @@ namespace YnabApi.Items
         {
             return $"{this.Date}: {this.Amount}";
         }
+
+
+        internal JObject GetJson() => (JObject)this._transaction.DeepClone();
     }
 }

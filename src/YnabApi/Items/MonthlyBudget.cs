@@ -24,7 +24,13 @@ namespace YnabApi.Items
 
         public string Id { get; }
         public DateTime MonthAndYear { get; }
-        public IList<MonthlyCategoryBudget> CategoryBudgets { get; } 
+        public IList<MonthlyCategoryBudget> CategoryBudgets { get; }
 
+        public override string ToString()
+        {
+            return $"Monthly budget {this.MonthAndYear}";
+        }
+
+        internal JObject GetJson() => (JObject)this._monthlyBudget.DeepClone();
     }
 }

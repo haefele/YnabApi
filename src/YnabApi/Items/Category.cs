@@ -46,5 +46,7 @@ namespace YnabApi.Items
         {
             return $"{this.MasterName} - {this.Name}";
         }
+
+        internal JObject GetJson() => (JObject)this._category.DeepClone();
     }
 }

@@ -20,5 +20,13 @@ namespace YnabApi.Items
         public string Id { get; }
         public Category Category { get; }
         public decimal Budgeted { get; }
+
+        public override string ToString()
+        {
+            return $"Monthly category budget {this.Category}";
+        }
+
+
+        internal JObject GetJson() => (JObject)this._monthlyCategoryBudget.DeepClone();
     }
 }

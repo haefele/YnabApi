@@ -26,5 +26,7 @@ namespace YnabApi.Items
         {
             return this.Name;
         }
+
+        internal JObject GetJson() => (JObject)this._account.DeepClone();
     }
 }
