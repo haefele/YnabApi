@@ -39,6 +39,7 @@
     <Compile Include="DeviceActions\ChangeMonthlyBudgetAction.cs" />
     <Compile Include="DeviceActions\CreatePayeeDeviceAction.cs" />
     <Compile Include="DeviceActions\CreateTransactionDeviceAction.cs" />
+    <Compile Include="DeviceActions\DeleteTransactionDeviceAction.cs" />
     <Compile Include="DeviceActions\IDeviceAction.cs" />
     <Compile Include="DeviceActions\IHaveAccountId.cs" />
     <Compile Include="DeviceActions\IHaveCategoryId.cs" />
