@@ -50,5 +50,10 @@ namespace YnabApi.Universal
         {
             await this._rootFolder.CreateFolderAsync(directory);
         }
+
+        public Task FlushWritesAsync()
+        {
+            return Task.CompletedTask;
+        }
     }
 }

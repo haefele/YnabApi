@@ -58,5 +58,10 @@ namespace YnabApi.Dropbox
         {
             return Task.FromResult((object)null);
         }
+
+        public Task FlushWritesAsync()
+        {
+            return Task.FromResult((object)null);
+        }
     }
 }
