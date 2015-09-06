@@ -86,6 +86,8 @@ namespace YnabApi
             var result = new RegisteredDevice(this._settings, this, json);
             (await this.GetRegisteredDevicesAsync()).Add(result);
 
+            await this._settings.FileSystem.FlushWritesAsync();
+
             return result;
         }
         

@@ -208,6 +208,8 @@ namespace YnabApi
             this._device["knowledge"] = endVersion;
             var deviceFilePath = YnabPaths.DeviceFile(dataPath, this.ShortDeviceId);
             await this._settings.FileSystem.WriteFileAsync(deviceFilePath, this._device.ToString());
+
+            await this._settings.FileSystem.FlushWritesAsync();
         }
 
 

@@ -48,6 +48,11 @@ namespace YnabApi.Desktop
             return Task.CompletedTask;
         }
 
+        public Task FlushWritesAsync()
+        {
+            return Task.CompletedTask;
+        }
+
         private string GetRootDirectory()
         {
             string userFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);

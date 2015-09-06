@@ -9,5 +9,6 @@ namespace YnabApi.Files
         Task<IList<string>> GetFilesAsync(string directory);
         Task WriteFileAsync(string file, string content);
         Task CreateDirectoryAsync(string directory);
+        Task FlushWritesAsync();
     }
 }
