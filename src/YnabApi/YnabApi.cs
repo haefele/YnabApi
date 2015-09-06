@@ -29,6 +29,10 @@ namespace YnabApi
                     string ynabSettingsFilePath = YnabPaths.YnabSettingsFile();
 
                     var ynabSettingsJson = await this._settings.FileSystem.ReadFileAsync(ynabSettingsFilePath);
+
+                    if (ynabSettingsJson == null)
+                        return new List<Budget>();
+
                     var ynabSettings = JObject.Parse(ynabSettingsJson);
 
                     string relativeBudgetsFolder = ynabSettings.Value<string>("relativeDefaultBudgetsFolder");
