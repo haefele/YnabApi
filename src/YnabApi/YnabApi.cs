@@ -26,23 +26,30 @@ namespace YnabApi
             {
                 this._cachedBudgets = new Lazy<Task<IList<Budget>>>(async () =>
                 {
-                    string ynabSettingsFilePath = YnabPaths.YnabSettingsFile();
+                    try
+                    {
+                        string ynabSettingsFilePath = YnabPaths.YnabSettingsFile();
 
-                    var ynabSettingsJson = await this._settings.FileSystem.ReadFileAsync(ynabSettingsFilePath);
+                        var ynabSettingsJson = await this._settings.FileSystem.ReadFileAsync(ynabSettingsFilePath);
 
-                    if (ynabSettingsJson == null)
-                        return new List<Budget>();
+                        if (ynabSettingsJson == null)
+                            return new List<Budget>();
 
-                    var ynabSettings = JObject.Parse(ynabSettingsJson);
+                        var ynabSettings = JObject.Parse(ynabSettingsJson);
 
-                    string relativeBudgetsFolder = ynabSettings.Value<string>("relativeDefaultBudgetsFolder");
+                        string relativeBudgetsFolder = ynabSettings.Value<string>("relativeDefaultBudgetsFolder");
 
-                    return ynabSettings
-                        .Value<JArray>("relativeKnownBudgets")
-                        .Values()
-                        .Select(f => f.Value<string>())
-                        .Select(f => new Budget(this._settings, this.ExtractBudgetName(f, relativeBudgetsFolder), f))
-                        .ToArray();
+                        return ynabSettings
+                            .Value<JArray>("relativeKnownBudgets")
+                            .Values()
+                            .Select(f => f.Value<string>())
+                            .Select(f => new Budget(this._settings, this.ExtractBudgetName(f, relativeBudgetsFolder), f))
+                            .ToArray();
+                    }
+                    catch (Exception exception) when (exception is YnabApiException == false)
+                    {
+                        throw new YnabApiException("Error while loading the budgets.", exception);
+                    }
                 });
             }
 

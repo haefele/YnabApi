@@ -32,19 +32,26 @@ namespace YnabApi
             {
                 this._cachedRegisteredDevices = new Lazy<Task<IList<RegisteredDevice>>>(async () =>
                 {
-                    var dataFolderPath = await this.GetDataFolderPathAsync();
-
-                    var result = new List<RegisteredDevice>();
-
-                    foreach (var deviceFile in await this._settings.FileSystem.GetFilesAsync(YnabPaths.DevicesFolder(dataFolderPath)))
+                    try
                     {
-                        var deviceJson = await this._settings.FileSystem.ReadFileAsync(deviceFile);
-                        var device = JObject.Parse(deviceJson);
+                        var dataFolderPath = await this.GetDataFolderPathAsync();
 
-                        result.Add(new RegisteredDevice(this._settings, this, device));
+                        var result = new List<RegisteredDevice>();
+
+                        foreach (var deviceFile in await this._settings.FileSystem.GetFilesAsync(YnabPaths.DevicesFolder(dataFolderPath)))
+                        {
+                            var deviceJson = await this._settings.FileSystem.ReadFileAsync(deviceFile);
+                            var device = JObject.Parse(deviceJson);
+
+                            result.Add(new RegisteredDevice(this._settings, this, device));
+                        }
+
+                        return result;
                     }
-
-                    return result;
+                    catch (Exception exception) when (exception is YnabApiException == false)
+                    {
+                        throw new YnabApiException("Error while loading the registered devices.", exception);
+                    }
                 });
             }
             return this._cachedRegisteredDevices.Value;
@@ -52,43 +59,50 @@ namespace YnabApi
         
         public async Task<RegisteredDevice> RegisterDevice(string deviceName)
         {
-            var alreadyRegisteredDevices = await this.GetRegisteredDevicesAsync();
-
-            var existingDevice = alreadyRegisteredDevices.FirstOrDefault(f => f.FriendlyName == deviceName && f.YnabVersion == Constants.YnabVersion);
-
-            if (existingDevice != null)
-                return existingDevice;
-
-            var deviceId = await this.GetNextFreeDeviceIdAsync();
-            var deviceGuid = EntityId.CreateNew();
-
-            var json = new JObject
+            try
             {
-                { "deviceType", "Desktop (Xemio)" },
-                { "highestDataVersionImported", "4.2" },
-                { "friendlyName", deviceName },
-                { "shortDeviceId", deviceId },
-                { "hasFullKnowledge", false },
-                { "knowledge", Knowledge.CreateKnowledgeForNewDevice(alreadyRegisteredDevices.First(f => f.HasFullKnowledge).KnowledgeString, deviceId) },
-                { "deviceGUID", deviceGuid },
-                { "knowledgeInFullBudgetFile", null },
-                { "YNABVersion", Constants.YnabVersion },
-                { "formatVersion", "1.2" },
-                { "lastDataVersionFullyKnown", "4.2" }
-            };
+                var alreadyRegisteredDevices = await this.GetRegisteredDevicesAsync();
+
+                var existingDevice = alreadyRegisteredDevices.FirstOrDefault(f => f.FriendlyName == deviceName && f.YnabVersion == Constants.YnabVersion);
+
+                if (existingDevice != null)
+                    return existingDevice;
+
+                var deviceId = await this.GetNextFreeDeviceIdAsync();
+                var deviceGuid = EntityId.CreateNew();
+
+                var json = new JObject
+                {
+                    { "deviceType", "Desktop (Xemio)" },
+                    { "highestDataVersionImported", "4.2" },
+                    { "friendlyName", deviceName },
+                    { "shortDeviceId", deviceId },
+                    { "hasFullKnowledge", false },
+                    { "knowledge", Knowledge.CreateKnowledgeForNewDevice(alreadyRegisteredDevices.First(f => f.HasFullKnowledge).KnowledgeString, deviceId) },
+                    { "deviceGUID", deviceGuid },
+                    { "knowledgeInFullBudgetFile", null },
+                    { "YNABVersion", Constants.YnabVersion },
+                    { "formatVersion", "1.2" },
+                    { "lastDataVersionFullyKnown", "4.2" }
+                };
             
-            var dataFolderPath = await this.GetDataFolderPathAsync();
-            var deviceFilePath = YnabPaths.DeviceFile(dataFolderPath, deviceId);
+                var dataFolderPath = await this.GetDataFolderPathAsync();
+                var deviceFilePath = YnabPaths.DeviceFile(dataFolderPath, deviceId);
 
-            await this._settings.FileSystem.WriteFileAsync(deviceFilePath, json.ToString());
-            await this._settings.FileSystem.CreateDirectoryAsync(YnabPaths.DeviceFolder(dataFolderPath, deviceGuid));
+                await this._settings.FileSystem.WriteFileAsync(deviceFilePath, json.ToString());
+                await this._settings.FileSystem.CreateDirectoryAsync(YnabPaths.DeviceFolder(dataFolderPath, deviceGuid));
             
-            var result = new RegisteredDevice(this._settings, this, json);
-            (await this.GetRegisteredDevicesAsync()).Add(result);
+                var result = new RegisteredDevice(this._settings, this, json);
+                (await this.GetRegisteredDevicesAsync()).Add(result);
 
-            await this._settings.FileSystem.FlushWritesAsync();
+                await this._settings.FileSystem.FlushWritesAsync();
 
-            return result;
+                return result;
+            }
+            catch (Exception exception) when (exception is YnabApiException == false)
+            {
+                throw new YnabApiException($"Error while registering the device {deviceName}.", exception);
+            }
         }
         
         private async Task<string> GetNextFreeDeviceIdAsync()
