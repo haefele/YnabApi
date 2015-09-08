@@ -5,7 +5,7 @@ using Newtonsoft.Json.Linq;
 
 namespace YnabApi.Items
 {
-    public class MonthlyBudget
+    public class MonthlyBudget : IEquatable<MonthlyBudget>
     {
         private readonly JObject _monthlyBudget;
 
@@ -25,12 +25,42 @@ namespace YnabApi.Items
         public string Id { get; }
         public DateTime MonthAndYear { get; }
         public IList<MonthlyCategoryBudget> CategoryBudgets { get; }
+        
+        internal JObject GetJson() => (JObject)this._monthlyBudget.DeepClone();
 
         public override string ToString()
         {
             return $"Monthly budget {this.MonthAndYear}";
         }
 
-        internal JObject GetJson() => (JObject)this._monthlyBudget.DeepClone();
+        public bool Equals(MonthlyBudget other)
+        {
+            if (ReferenceEquals(null, other))
+                return false;
+
+            if (ReferenceEquals(this, other))
+                return true;
+
+            return string.Equals(this.Id, other.Id);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj))
+                return false;
+
+            if (ReferenceEquals(this, obj))
+                return true;
+
+            if (obj.GetType() != this.GetType())
+                return false;
+
+            return this.Equals((MonthlyBudget)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return this.Id?.GetHashCode() ?? 0;
+        }
     }
 }
