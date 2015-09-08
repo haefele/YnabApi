@@ -59,6 +59,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RegisteredDevice.cs" />
     <Compile Include="YnabApi.cs" />
+    <Compile Include="YnabApiException.cs" />
     <Compile Include="YnabApiSettings.cs" />
   </ItemGroup>
   <ItemGroup>
