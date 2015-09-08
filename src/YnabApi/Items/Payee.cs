@@ -14,10 +14,12 @@ namespace YnabApi.Items
 
             this.Id = payee.Value<string>("entityId");
             this.Name = payee.Value<string>("name");
+            this.IsTombstone = payee.Value<bool>("isTombstone");
         }
 
         public string Id { get; }
         public string Name { get; }
+        public bool IsTombstone { get; }
 
         string IHavePayeeId.Id => this.Id;
 

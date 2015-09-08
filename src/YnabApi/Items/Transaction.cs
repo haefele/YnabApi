@@ -22,6 +22,7 @@ namespace YnabApi.Items
             this.Date = transaction.Value<DateTime>("date");
             this.Payee = allPayees.FirstOrDefault(f => f.Id == transaction.Value<string>("payeeId"));
             this.Memo = transaction.Value<string>("memo");
+            this.IsTombstone = transaction.Value<bool>("isTombstone");
         }
 
         public string Id { get; }
@@ -32,6 +33,7 @@ namespace YnabApi.Items
         public DateTime Date { get; }
         public Payee Payee { get; }
         public string Memo { get; }
+        public bool IsTombstone { get; }
         
         string IHaveTransactionId.Id => this.Id;
 
