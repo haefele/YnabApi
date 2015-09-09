@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 
 namespace YnabApi.DeviceActions
@@ -10,15 +11,15 @@ namespace YnabApi.DeviceActions
         public decimal Amount { get; set; }
         public string Note { get; set; }
 
-        public JObject ToJsonForYdiff(string deviceId, int knowledgeNumber)
+        public IEnumerable<JObject> ToJsonForYdiff(string deviceId, KnowledgeGenerator knowledgeGenerator)
         {
-            return new JObject
+            yield return new JObject
             {
                 { "budgeted", this.Amount },
                 { "categoryId", this.Category.Id },
                 { "entityId", $"MCB/{this.MonthAndYear.Year}-{this.MonthAndYear.Month}/{this.Category.Id}" },
                 { "entityType", "monthlyCategoryBudget" },
-                { "entityVersion", $"{deviceId}-{knowledgeNumber}" },
+                { "entityVersion", $"{deviceId}-{knowledgeGenerator.GetNext()}" },
                 { "isTombstone", false },
                 { "madeWithKnowledge", null },
                 { "note", this.Note },

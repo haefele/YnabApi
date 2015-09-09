@@ -1,9 +1,10 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 
 namespace YnabApi.DeviceActions
 {
     public interface IDeviceAction
     {
-        JObject ToJsonForYdiff(string deviceId, int knowledgeNumber);
+        IEnumerable<JObject> ToJsonForYdiff(string deviceId, KnowledgeGenerator knowledgeGenerator);
     }
 }
