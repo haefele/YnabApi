@@ -12,6 +12,7 @@ namespace YnabApi.DeviceActions
         {
             var json = this.Transaction.GetJson();
             json["isTombstone"] = true;
+            json["entityVersion"] = $"{deviceId}-{knowledgeGenerator.GetNext()}";
 
             yield return json;
         }
