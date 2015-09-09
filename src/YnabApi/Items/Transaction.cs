@@ -16,6 +16,7 @@ namespace YnabApi.Items
 
             this.Id = transaction.Value<string>("entityId");
             this.Account = allAccounts.FirstOrDefault(f => f.Id == transaction.Value<string>("accountId"));
+            this.TargetAccount = allAccounts.FirstOrDefault(f => f.Id == transaction.Value<string>("targetAccountId"));
             this.Amount = transaction.Value<decimal>("amount");
             this.Category = allCategories.FirstOrDefault(f => f.Id == transaction.Value<string>("categoryId"));
             this.Cleared = transaction.Value<string>("cleared") == "Cleared";
@@ -27,6 +28,8 @@ namespace YnabApi.Items
 
         public string Id { get; }
         public Account Account { get; }
+        public Account TargetAccount { get; }
+        public bool IsTransfer => this.TargetAccount != null;
         public decimal Amount { get; }
         public Category Category { get; }
         public bool Cleared { get; }

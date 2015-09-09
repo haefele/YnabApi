@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 using YnabApi.Helpers;
 
 namespace YnabApi.DeviceActions
@@ -13,15 +14,15 @@ namespace YnabApi.DeviceActions
         public string Id { get; }
         public string Name { get; set; }
 
-        public JObject ToJsonForYdiff(string deviceId, int knowledgeNumber)
+        public IEnumerable<JObject> ToJsonForYdiff(string deviceId, KnowledgeGenerator knowledgeGenerator)
         {
-            return new JObject
+            yield return new JObject
             {
                 { "name", this.Name },
                 { "autoFillCategoryId", null },
                 { "isTombstone", false },
                 { "madeWithKnowledge", null },
-                { "entityVersion", $"{deviceId}-{knowledgeNumber}" },
+                { "entityVersion", $"{deviceId}-{knowledgeGenerator.GetNext()}" },
                 { "enabled", true },
                 { "isResolvedConflict", false },
                 { "autoFillMemo", string.Empty },

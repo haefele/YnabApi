@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 using YnabApi.Items;
 
 namespace YnabApi.DeviceActions
@@ -7,13 +8,13 @@ namespace YnabApi.DeviceActions
     {
         public Transaction Transaction { get; set; }
 
-        public JObject ToJsonForYdiff(string deviceId, int knowledgeNumber)
+        public IEnumerable<JObject> ToJsonForYdiff(string deviceId, KnowledgeGenerator knowledgeGenerator)
         {
             var json = this.Transaction.GetJson();
-
             json["isTombstone"] = true;
+            json["entityVersion"] = $"{deviceId}-{knowledgeGenerator.GetNext()}";
 
-            return json;
+            yield return json;
         }
     }
 }

@@ -217,9 +217,13 @@ namespace YnabApi
             {
                 var startKnowledge = this.CurrentKnowledge;
 
+                var knowledgeGenerator = new KnowledgeGenerator(startKnowledge);
+
                 JArray itemsJsonArray = new JArray(from action in actions
-                    let knowledge = ++this.CurrentKnowledge
-                    select action.ToJsonForYdiff(this.ShortDeviceId, knowledge));
+                                                   from item in action.ToJsonForYdiff(this.ShortDeviceId, knowledgeGenerator)
+                                                   select item);
+
+                this.CurrentKnowledge = knowledgeGenerator.GetCurrent();
 
                 var startVersion = Knowledge.CreateKnowledgeForYdiff(this.KnowledgeString, this.ShortDeviceId, startKnowledge);
                 var endVersion = Knowledge.CreateKnowledgeForYdiff(this.KnowledgeString, this.ShortDeviceId, this.CurrentKnowledge);
@@ -273,5 +277,25 @@ namespace YnabApi
             return this._cachedBudgetFile.Value;
         }
         #endregion
+    }
+
+    public class KnowledgeGenerator
+    {
+        private int _knowledge;
+
+        internal KnowledgeGenerator(int knowledge)
+        {
+            this._knowledge = knowledge;
+        }
+
+        public int GetNext()
+        {
+            return ++this._knowledge;
+        }
+
+        internal int GetCurrent()
+        {
+            return this._knowledge;
+        }
     }
 }

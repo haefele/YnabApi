@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using YnabApi.Helpers;
 
@@ -19,9 +20,9 @@ namespace YnabApi.DeviceActions
         public string Memo { get; set; }
         public bool Cleared { get; set; }
 
-        public JObject ToJsonForYdiff(string deviceId, int knowledgeNumber)
+        public IEnumerable<JObject> ToJsonForYdiff(string deviceId, KnowledgeGenerator knowledgeGenerator)
         {
-            return new JObject
+            yield return new JObject
             {
                 { "accepted", true },
                 { "accountId", this.Account.Id },
@@ -33,7 +34,7 @@ namespace YnabApi.DeviceActions
                 { "dateEnteredFromSchedule", null },
                 { "entityId", this.Id },
                 { "entityType", "transaction" },
-                { "entityVersion", $"{deviceId}-{knowledgeNumber}" },
+                { "entityVersion", $"{deviceId}-{knowledgeGenerator.GetNext()}" },
                 { "flag", null },
                 { "importedPayee", null },
                 { "isTombstone", false },
