@@ -104,7 +104,13 @@ namespace YnabApi
                 throw new YnabApiException($"Error while registering the device {deviceName}.", exception);
             }
         }
-        
+
+        public void ClearCache()
+        {
+            this._cachedRegisteredDevices = null;
+            this._cachedDataFolderPath = null;
+        }
+
         private async Task<string> GetNextFreeDeviceIdAsync()
         {
             var registeredDevices = await this.GetRegisteredDevicesAsync();

@@ -210,6 +210,16 @@ namespace YnabApi
 
             return this._cachedMonthlyBudgets.Value;
         }
+
+        public void ClearCache()
+        {
+            this._cachedPayees = null;
+            this._cachedAccounts = null;
+            this._cachedCategories = null;
+            this._cachedTransactions = null;
+            this._cachedMonthlyBudgets = null;
+            this._cachedBudgetFile = null;
+        }
         
         public async Task ExecuteActions(params IDeviceAction[] actions)
         {
