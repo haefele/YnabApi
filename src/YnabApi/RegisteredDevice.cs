@@ -102,11 +102,30 @@ namespace YnabApi
                     try
                     {
                         var budgetFile = await this.GetBudgetFileAsync();
-                        return budgetFile
+                        var accounts = budgetFile
                             .Value<JArray>("accounts")
                             .Values<JObject>()
                             .Select(f => new Account(f))
-                            .ToList();
+                            .ToHashSet(HashSetDuplicateOptions.Override);
+
+                        var localChanges = await this.GetLocalChangesAsync();
+
+                        foreach (var localChange in localChanges)
+                        {
+                            var localAccounts = localChange
+                             .Value<JArray>("items")
+                             .Values<JObject>()
+                             .Where(f => f.Value<string>("entityType") == "account")
+                             .Select(f => new Account(f))
+                             .ToList();
+
+                            foreach (var localAccount in localAccounts)
+                            {
+                                accounts.Add(localAccount, HashSetDuplicateOptions.Override);
+                            }
+                        }
+
+                        return accounts.ToList();
                     }
                     catch (Exception exception) when (exception is YnabApiException == false)
                     {
