@@ -53,9 +53,6 @@ namespace YnabApi
                 {
                     try
                     {
-                        if (this.HasFullKnowledge == false)
-                            return new List<Payee>();
-
                         var budgetFile = await this.GetBudgetFileAsync();
                         return budgetFile
                             .Value<JArray>("payees")
@@ -81,9 +78,6 @@ namespace YnabApi
                 {
                     try
                     {
-                        if (this.HasFullKnowledge == false)
-                            return new List<Account>();
-
                         var budgetFile = await this.GetBudgetFileAsync();
                         return budgetFile
                             .Value<JArray>("accounts")
@@ -109,9 +103,6 @@ namespace YnabApi
                 {
                     try
                     {
-                        if (this.HasFullKnowledge == false)
-                            return new List<Category>();
-
                         var budgetFile = await this.GetBudgetFileAsync();
 
                         var allCategories = budgetFile
@@ -155,9 +146,6 @@ namespace YnabApi
                 {
                     try
                     {
-                        if (this.HasFullKnowledge == false)
-                            return new List<Transaction>();
-
                         var budgetFile = await this.GetBudgetFileAsync();
 
                         var allAccounts = await this.GetAccountsAsync();
@@ -188,9 +176,6 @@ namespace YnabApi
                 {
                     try
                     {
-                        if (this.HasFullKnowledge == false)
-                            return new List<MonthlyBudget>();
-
                         var budgetFile = await this.GetBudgetFileAsync();
 
                         var allCategories = await this.GetCategoriesAsync();
@@ -274,11 +259,21 @@ namespace YnabApi
             {
                 this._cachedBudgetFile = new Lazy<Task<JObject>>(async () =>
                 {
-                    if (this.HasFullKnowledge == false)
-                        throw new NotSupportedException("Accessing the budget file only works if the device has full budget knowledge. In this case, it doesn't.");
+                    string budgetFilePath;
 
-                    var filePath = YnabPaths.BudgetFile(YnabPaths.DeviceFolder(await this.Budget.GetDataFolderPathAsync(), this.DeviceGuid));
-                    string file = await this._settings.FileSystem.ReadFileAsync(filePath);
+                    if (this.HasFullKnowledge)
+                    {
+                        budgetFilePath = YnabPaths.BudgetFile(YnabPaths.DeviceFolder(await this.Budget.GetDataFolderPathAsync(), this.DeviceGuid));
+                    }
+                    else
+                    {
+                        var allDevices = await this.Budget.GetRegisteredDevicesAsync();
+                        var fullKnowledgeDevice = allDevices.First(f => f.HasFullKnowledge);
+
+                        budgetFilePath = YnabPaths.BudgetFile(YnabPaths.DeviceFolder(await this.Budget.GetDataFolderPathAsync(), fullKnowledgeDevice.DeviceGuid));
+                    }
+
+                    string file = await this._settings.FileSystem.ReadFileAsync(budgetFilePath);
 
                     return JObject.Parse(file);
                 });
