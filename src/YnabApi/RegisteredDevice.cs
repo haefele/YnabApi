@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using YnabApi.DeviceActions;
+using YnabApi.Extensions;
 using YnabApi.Helpers;
 using YnabApi.Items;
 
@@ -20,6 +22,7 @@ namespace YnabApi
         private Lazy<Task<IList<Transaction>>>  _cachedTransactions;
         private Lazy<Task<IList<MonthlyBudget>>> _cachedMonthlyBudgets;
         private Lazy<Task<JObject>> _cachedBudgetFile;
+        private Lazy<Task<IList<JObject>>> _cachedLocalChanges;
 
         public RegisteredDevice(YnabApiSettings settings, Budget budget, JObject device)
         {
@@ -53,15 +56,32 @@ namespace YnabApi
                 {
                     try
                     {
-                        if (this.HasFullKnowledge == false)
-                            return new List<Payee>();
-
                         var budgetFile = await this.GetBudgetFileAsync();
-                        return budgetFile
+
+                        var payees = budgetFile
                             .Value<JArray>("payees")
                             .Values<JObject>()
                             .Select(f => new Payee(f))
-                            .ToList();
+                            .ToHashSet(HashSetDuplicateOptions.Override);
+
+                        var localChanges = await this.GetLocalChangesAsync();
+
+                        foreach (var localChange in localChanges)
+                        {
+                            var localPayees = localChange
+                                .Value<JArray>("items")
+                                .Values<JObject>()
+                                .Where(f => f.Value<string>("entityType") == "payee")
+                                .Select(f => new Payee(f))
+                                .ToList();
+
+                            foreach (var localPayee in localPayees)
+                            {
+                                payees.Add(localPayee, HashSetDuplicateOptions.Override);
+                            }
+                        }
+
+                        return payees.ToList();
                     }
                     catch (Exception exception) when (exception is YnabApiException == false)
                     {
@@ -81,15 +101,31 @@ namespace YnabApi
                 {
                     try
                     {
-                        if (this.HasFullKnowledge == false)
-                            return new List<Account>();
-
                         var budgetFile = await this.GetBudgetFileAsync();
-                        return budgetFile
+                        var accounts = budgetFile
                             .Value<JArray>("accounts")
                             .Values<JObject>()
                             .Select(f => new Account(f))
-                            .ToList();
+                            .ToHashSet(HashSetDuplicateOptions.Override);
+
+                        var localChanges = await this.GetLocalChangesAsync();
+
+                        foreach (var localChange in localChanges)
+                        {
+                            var localAccounts = localChange
+                             .Value<JArray>("items")
+                             .Values<JObject>()
+                             .Where(f => f.Value<string>("entityType") == "account")
+                             .Select(f => new Account(f))
+                             .ToList();
+
+                            foreach (var localAccount in localAccounts)
+                            {
+                                accounts.Add(localAccount, HashSetDuplicateOptions.Override);
+                            }
+                        }
+
+                        return accounts.ToList();
                     }
                     catch (Exception exception) when (exception is YnabApiException == false)
                     {
@@ -109,9 +145,6 @@ namespace YnabApi
                 {
                     try
                     {
-                        if (this.HasFullKnowledge == false)
-                            return new List<Category>();
-
                         var budgetFile = await this.GetBudgetFileAsync();
 
                         var allCategories = budgetFile
@@ -155,20 +188,36 @@ namespace YnabApi
                 {
                     try
                     {
-                        if (this.HasFullKnowledge == false)
-                            return new List<Transaction>();
-
                         var budgetFile = await this.GetBudgetFileAsync();
 
                         var allAccounts = await this.GetAccountsAsync();
                         var allCategories = await this.GetCategoriesAsync();
                         var allPayees = await this.GetPayeesAsync();
-
-                        return budgetFile
+                        
+                        var transactions = budgetFile
                             .Value<JArray>("transactions")
                             .Values<JObject>()
                             .Select(f => new Transaction(f, allAccounts, allCategories, allPayees))
-                            .ToList();
+                            .ToHashSet(HashSetDuplicateOptions.Override);
+
+                        var localChanges = await this.GetLocalChangesAsync();
+
+                        foreach (var localChange in localChanges)
+                        {
+                            var localTransactions = localChange
+                                .Value<JArray>("items")
+                                .Values<JObject>()
+                                .Where(f => f.Value<string>("entityType") == "transaction")
+                                .Select(f => new Transaction(f, allAccounts, allCategories, allPayees))
+                                .ToList();
+
+                            foreach (var localTransaction in localTransactions)
+                            {
+                                transactions.Add(localTransaction, HashSetDuplicateOptions.Override);
+                            }
+                        }
+
+                        return transactions.ToList();
                     }
                     catch (Exception exception) when (exception is YnabApiException == false)
                     {
@@ -188,9 +237,6 @@ namespace YnabApi
                 {
                     try
                     {
-                        if (this.HasFullKnowledge == false)
-                            return new List<MonthlyBudget>();
-
                         var budgetFile = await this.GetBudgetFileAsync();
 
                         var allCategories = await this.GetCategoriesAsync();
@@ -209,6 +255,17 @@ namespace YnabApi
             }
 
             return this._cachedMonthlyBudgets.Value;
+        }
+
+        public void ClearCache()
+        {
+            this._cachedPayees = null;
+            this._cachedAccounts = null;
+            this._cachedCategories = null;
+            this._cachedTransactions = null;
+            this._cachedMonthlyBudgets = null;
+            this._cachedBudgetFile = null;
+            this._cachedLocalChanges = null;
         }
         
         public async Task ExecuteActions(params IDeviceAction[] actions)
@@ -264,17 +321,66 @@ namespace YnabApi
             {
                 this._cachedBudgetFile = new Lazy<Task<JObject>>(async () =>
                 {
-                    if (this.HasFullKnowledge == false)
-                        throw new NotSupportedException("Accessing the budget file only works if the device has full budget knowledge. In this case, it doesn't.");
+                    string budgetFilePath;
 
-                    var filePath = YnabPaths.BudgetFile(YnabPaths.DeviceFolder(await this.Budget.GetDataFolderPathAsync(), this.DeviceGuid));
-                    string file = await this._settings.FileSystem.ReadFileAsync(filePath);
+                    if (this.HasFullKnowledge)
+                    {
+                        budgetFilePath = YnabPaths.BudgetFile(YnabPaths.DeviceFolder(await this.Budget.GetDataFolderPathAsync(), this.DeviceGuid));
+                    }
+                    else
+                    {
+                        var allDevices = await this.Budget.GetRegisteredDevicesAsync();
+                        var fullKnowledgeDevice = allDevices.First(f => f.HasFullKnowledge);
+
+                        budgetFilePath = YnabPaths.BudgetFile(YnabPaths.DeviceFolder(await this.Budget.GetDataFolderPathAsync(), fullKnowledgeDevice.DeviceGuid));
+                    }
+
+                    string file = await this._settings.FileSystem.ReadFileAsync(budgetFilePath);
 
                     return JObject.Parse(file);
                 });
             }
 
             return this._cachedBudgetFile.Value;
+        }
+        private Task<IList<JObject>> GetLocalChangesAsync()
+        {
+            if (this._cachedLocalChanges == null || this._settings.CacheRegisteredDeviceData == false)
+            {
+                this._cachedLocalChanges = new Lazy<Task<IList<JObject>>>(async () =>
+                {
+                    var budgetFile = await this.GetBudgetFileAsync();
+                    var budgetFileKnowledge = budgetFile.Value<JObject>("fileMetaData").Value<string>("currentKnowledge");
+
+                    var budgetFileKnowledgeOfThisDevice = Knowledge.ExtractKnowledgeForDevice(budgetFileKnowledge, this.ShortDeviceId);
+                    var files = await this._settings.FileSystem.GetFilesAsync(YnabPaths.DeviceFolder(await this.Budget.GetDataFolderPathAsync(), this.DeviceGuid));
+
+                    var regex = new Regex(".*_.-([0-9]*).ydiff");
+
+                    var result = new List<JObject>();
+
+                    foreach (var file in files)
+                    {
+                        var fileName = YnabPaths.GetFileName(file);
+
+                        if (regex.IsMatch(fileName) == false)
+                            continue;
+
+                        var match = regex.Match(fileName);
+                        var endKnowledge = int.Parse(match.Groups[1].Captures[0].Value);
+
+                        if (endKnowledge > budgetFileKnowledgeOfThisDevice)
+                        {
+                            var fileContent = await this._settings.FileSystem.ReadFileAsync(file);
+                            result.Add(JObject.Parse(fileContent));
+                        }
+                    }
+
+                    return result;
+                });
+            }
+
+            return this._cachedLocalChanges.Value;
         }
         #endregion
     }

@@ -49,5 +49,10 @@ namespace YnabApi.Helpers
         {
             return Path.Combine(deviceFolder, "Budget.yfull");
         }
+
+        public static string GetFileName(string filePath)
+        {
+            return Path.GetFileName(filePath);
+        }
     }
 }
