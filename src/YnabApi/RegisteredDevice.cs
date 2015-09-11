@@ -336,7 +336,7 @@ namespace YnabApi
                     }
 
                     string file = await this._settings.FileSystem.ReadFileAsync(budgetFilePath);
-
+                    
                     return JObject.Parse(file);
                 });
             }

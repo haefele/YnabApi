@@ -57,6 +57,7 @@
     <Compile Include="Items\MonthlyCategoryBudget.cs" />
     <Compile Include="Items\Payee.cs" />
     <Compile Include="Items\Transaction.cs" />
+    <Compile Include="Items\TransactionState.cs" />
     <Compile Include="KnowledgeGenerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RegisteredDevice.cs" />
