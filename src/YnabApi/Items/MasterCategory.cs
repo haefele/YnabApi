@@ -16,6 +16,7 @@ namespace YnabApi.Items
             this.Id = masterCategory.Value<string>("entityId");
             this.Name = masterCategory.Value<string>("name");
             this.IsTombstone = masterCategory.Value<bool>("isTombstone");
+            this.IsSystemCategory = false;
             this.SubCategories = masterCategory
                 .Value<JArray>("subCategories")
                 .Values<JObject>()
@@ -23,9 +24,19 @@ namespace YnabApi.Items
                 .ToList();
         }
 
+        internal MasterCategory(string id, string name, IList<Category> subCategories)
+        {
+            this.Id = id;
+            this.Name = name;
+            this.IsTombstone = false;
+            this.IsSystemCategory = true;
+            this.SubCategories = subCategories;
+        }
+
         public string Id { get; }
         public string Name { get; }
         public bool IsTombstone { get; }
+        public bool IsSystemCategory { get; }
         public IList<Category> SubCategories { get; }
 
         internal JObject GetJson() => (JObject)this._masterCategory.DeepClone();

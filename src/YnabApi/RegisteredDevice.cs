@@ -136,6 +136,13 @@ namespace YnabApi
                             .Select(f => new MasterCategory(f))
                             .ToList();
                         
+                        allCategories.Add(new MasterCategory("Category/__System__", "System", new List<Category>
+                        {
+                            new Category("Category/__Split__", "Split"),
+                            new Category("Category/__DeferredIncome__", "Income for next month"),
+                            new Category("Category/__ImmediateIncome__", "Income for this month"),
+                        }));
+
                         return allCategories;
                     }
                     catch (Exception exception) when (exception is YnabApiException == false)

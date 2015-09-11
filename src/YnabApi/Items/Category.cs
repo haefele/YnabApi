@@ -15,12 +15,23 @@ namespace YnabApi.Items
             this.Id = category.Value<string>("entityId");
             this.Name = category.Value<string>("name");
             this.IsTombstone = category.Value<bool>("isTombstone");
+            this.IsSystemCategory = false;
+        }
+
+        internal Category(string id, string name)
+        {
+            this.Id = id;
+            this.Name = name;
+            this.IsTombstone = false;
+            this.IsSystemCategory = true;
         }
 
         public string Id { get; }
         public string Name { get; }
 
         public bool IsTombstone { get; }
+
+        public bool IsSystemCategory { get; }
 
         string IHaveCategoryId.Id => this.Id;
 
