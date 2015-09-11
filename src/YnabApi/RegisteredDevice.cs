@@ -23,7 +23,7 @@ namespace YnabApi
         private Lazy<Task<IList<Transaction>>>  _cachedTransactions;
         private Lazy<Task<IList<MonthlyBudget>>> _cachedMonthlyBudgets;
         private Lazy<Task<JObject>> _cachedBudgetFile;
-        private Lazy<Task<IList<Tuple<DateTime, JObject>>>> _cachedAllLocalChanges;
+        private Lazy<Task<IList<LocalChange>>> _cachedAllLocalChanges;
 
         public RegisteredDevice(YnabApiSettings settings, Budget budget, JObject device)
         {
@@ -307,12 +307,12 @@ namespace YnabApi
         {
             if (this._cachedAllLocalChanges == null || this._settings.CacheRegisteredDeviceData == false)
             {
-                this._cachedAllLocalChanges = new Lazy<Task<IList<Tuple<DateTime, JObject>>>>(async () =>
+                this._cachedAllLocalChanges = new Lazy<Task<IList<LocalChange>>>(async () =>
                 {
                     var budgetFile = await this.GetBudgetFileAsync();
                     var budgetFileKnowledge = budgetFile.Value<JObject>("fileMetaData").Value<string>("currentKnowledge");
 
-                    var result = new List<Tuple<DateTime, JObject>>();
+                    var result = new List<LocalChange>();
                     var regex = new Regex(".*_.-([0-9]*).ydiff");
 
                     foreach (var device in await this.Budget.GetRegisteredDevicesAsync())
@@ -338,7 +338,7 @@ namespace YnabApi
                                 var json = JObject.Parse(fileContent);
                                 var date = this.ExtractDateFromYdiff(json);
 
-                                result.Add(Tuple.Create(date, json));
+                                result.Add(new LocalChange(date, endKnowledge, json));
                             }
                         }
                     }
@@ -350,8 +350,9 @@ namespace YnabApi
             var localChanges = await this._cachedAllLocalChanges.Value;
 
             return localChanges
-                .OrderBy(f => f.Item1)
-                .Select(f => f.Item2)
+                .OrderBy(f => f.Date)
+                .ThenBy(f => f.EndEntityVersion)
+                .Select(f => f.DiffFileJson)
                 .Select(f => f.Value<JArray>("items"))
                 .SelectMany(f => f.Values<JObject>())
                 .Where(f => f.Value<string>("entityType") == entityType)
@@ -374,6 +375,23 @@ namespace YnabApi
                 return result;
 
             throw new InvalidOperationException("Could not parse publish-time");
+        }
+        #endregion
+
+        #region Internal
+
+        private class LocalChange
+        {
+            public LocalChange(DateTime date, int endEntityVersion, JObject diffFileJson)
+            {
+                this.Date = date;
+                this.EndEntityVersion = endEntityVersion;
+                this.DiffFileJson = diffFileJson;
+            }
+
+            public DateTime Date { get; }
+            public int EndEntityVersion { get; }
+            public JObject DiffFileJson { get; }
         }
         #endregion
     }
