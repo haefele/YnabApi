@@ -135,7 +135,7 @@ namespace YnabApi
                             .Values<JObject>()
                             .Select(f => new MasterCategory(f))
                             .ToList();
-
+                        
                         return allCategories;
                     }
                     catch (Exception exception) when (exception is YnabApiException == false)

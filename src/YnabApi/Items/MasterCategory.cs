@@ -8,8 +8,8 @@ namespace YnabApi.Items
     public class MasterCategory : IEquatable<MasterCategory>
     {
         private readonly JObject _masterCategory;
-
-        public MasterCategory(JObject masterCategory)
+        
+        internal MasterCategory(JObject masterCategory)
         {
             this._masterCategory = masterCategory;
 
