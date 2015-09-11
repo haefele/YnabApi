@@ -22,6 +22,9 @@ namespace YnabApi.Desktop
         {
             var directoryInfo = new DirectoryInfo(this.ToFullPath(directory));
 
+            if (directoryInfo.Exists == false)
+                return Task.FromResult<IList<string>>(new List<string>());
+
             IList<string> files = directoryInfo
                 .GetFiles()
                 .Select(f => f.FullName)
