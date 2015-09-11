@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 using YnabApi.Desktop;
 using YnabApi.DeviceActions;
 using YnabApi.Dropbox;
@@ -39,19 +41,8 @@ namespace YnabApi.Tests.Console
             var testBudget = budgets.First(f => f.BudgetName == "Test-Budget");
 
             var myDevice = await testBudget.RegisterDevice("Test-Device");
-
-            var allDevices = await testBudget.GetRegisteredDevicesAsync();
-            var fullKnowledgeDevice = allDevices.First(f => f.HasFullKnowledge);
-
-            var transactions = await fullKnowledgeDevice.GetTransactionsAsync();
-
-            var action = new DeleteTransactionDeviceAction
-            {
-                Transaction = transactions.Last()
-            };
-
-            await myDevice.ExecuteActions(action);
-
+            var transactions = await myDevice.GetTransactionsAsync();
+            
             //var createPayee = new CreatePayeeDeviceAction
             //{
             //    Name = "Bücherei"
