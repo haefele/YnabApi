@@ -8,11 +8,11 @@ namespace YnabApi.DeviceActions
     {
         public Transaction Transaction { get; set; }
 
-        public IEnumerable<JObject> ToJsonForYdiff(string deviceId, KnowledgeGenerator knowledgeGenerator)
+        public IEnumerable<JObject> ToJsonForYdiff(RegisteredDevice device, KnowledgeGenerator knowledgeGenerator)
         {
             var json = this.Transaction.GetJson();
             json["isTombstone"] = true;
-            json["entityVersion"] = $"{deviceId}-{knowledgeGenerator.GetNext()}";
+            json["entityVersion"] = $"{device.ShortDeviceId}-{knowledgeGenerator.GetNext()}";
 
             yield return json;
         }

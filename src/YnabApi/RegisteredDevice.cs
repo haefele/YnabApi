@@ -277,7 +277,7 @@ namespace YnabApi
                 var knowledgeGenerator = new KnowledgeGenerator(startKnowledge);
 
                 JArray itemsJsonArray = new JArray(from action in actions
-                                                   from item in action.ToJsonForYdiff(this.ShortDeviceId, knowledgeGenerator)
+                                                   from item in action.ToJsonForYdiff(this, knowledgeGenerator)
                                                    select item);
 
                 this.CurrentKnowledge = knowledgeGenerator.GetCurrent();
