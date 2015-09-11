@@ -19,7 +19,7 @@ namespace YnabApi.Items
             this.TargetAccount = allAccounts.FirstOrDefault(f => f.Id == transaction.Value<string>("targetAccountId"));
             this.Amount = transaction.Value<decimal>("amount");
             this.Category = allCategories.FirstOrDefault(f => f.Id == transaction.Value<string>("categoryId"));
-            this.Cleared = transaction.Value<string>("cleared") == "Cleared";
+            this.State = (TransactionState)Enum.Parse(typeof(TransactionState), transaction.Value<string>("cleared"));
             this.Date = transaction.Value<DateTime>("date");
             this.Payee = allPayees.FirstOrDefault(f => f.Id == transaction.Value<string>("payeeId"));
             this.Memo = transaction.Value<string>("memo");
@@ -32,7 +32,7 @@ namespace YnabApi.Items
         public bool IsTransfer => this.TargetAccount != null;
         public decimal Amount { get; }
         public Category Category { get; }
-        public bool Cleared { get; }
+        public TransactionState State { get; }
         public DateTime Date { get; }
         public Payee Payee { get; }
         public string Memo { get; }

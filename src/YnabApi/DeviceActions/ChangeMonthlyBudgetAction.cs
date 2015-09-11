@@ -11,7 +11,7 @@ namespace YnabApi.DeviceActions
         public decimal Amount { get; set; }
         public string Note { get; set; }
 
-        public IEnumerable<JObject> ToJsonForYdiff(string deviceId, KnowledgeGenerator knowledgeGenerator)
+        public IEnumerable<JObject> ToJsonForYdiff(RegisteredDevice device, KnowledgeGenerator knowledgeGenerator)
         {
             yield return new JObject
             {
@@ -19,7 +19,7 @@ namespace YnabApi.DeviceActions
                 { "categoryId", this.Category.Id },
                 { "entityId", $"MCB/{this.MonthAndYear.Year}-{this.MonthAndYear.Month}/{this.Category.Id}" },
                 { "entityType", "monthlyCategoryBudget" },
-                { "entityVersion", $"{deviceId}-{knowledgeGenerator.GetNext()}" },
+                { "entityVersion", $"{device.ShortDeviceId}-{knowledgeGenerator.GetNext()}" },
                 { "isTombstone", false },
                 { "madeWithKnowledge", null },
                 { "note", this.Note },

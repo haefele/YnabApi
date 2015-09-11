@@ -5,6 +5,6 @@ namespace YnabApi.DeviceActions
 {
     public interface IDeviceAction
     {
-        IEnumerable<JObject> ToJsonForYdiff(string deviceId, KnowledgeGenerator knowledgeGenerator);
+        IEnumerable<JObject> ToJsonForYdiff(RegisteredDevice device, KnowledgeGenerator knowledgeGenerator);
     }
 }

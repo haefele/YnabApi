@@ -14,7 +14,7 @@ namespace YnabApi.DeviceActions
         public string Id { get; }
         public string Name { get; set; }
 
-        public IEnumerable<JObject> ToJsonForYdiff(string deviceId, KnowledgeGenerator knowledgeGenerator)
+        public IEnumerable<JObject> ToJsonForYdiff(RegisteredDevice device, KnowledgeGenerator knowledgeGenerator)
         {
             yield return new JObject
             {
@@ -22,7 +22,7 @@ namespace YnabApi.DeviceActions
                 { "autoFillCategoryId", null },
                 { "isTombstone", false },
                 { "madeWithKnowledge", null },
-                { "entityVersion", $"{deviceId}-{knowledgeGenerator.GetNext()}" },
+                { "entityVersion", $"{device.ShortDeviceId}-{knowledgeGenerator.GetNext()}" },
                 { "enabled", true },
                 { "isResolvedConflict", false },
                 { "autoFillMemo", string.Empty },

@@ -20,7 +20,7 @@ namespace YnabApi.DeviceActions
         public string Memo { get; set; }
         public bool Cleared { get; set; }
 
-        public IEnumerable<JObject> ToJsonForYdiff(string deviceId, KnowledgeGenerator knowledgeGenerator)
+        public IEnumerable<JObject> ToJsonForYdiff(RegisteredDevice device, KnowledgeGenerator knowledgeGenerator)
         {
             yield return new JObject
             {
@@ -34,7 +34,7 @@ namespace YnabApi.DeviceActions
                 { "dateEnteredFromSchedule", null },
                 { "entityId", this.Id },
                 { "entityType", "transaction" },
-                { "entityVersion", $"{deviceId}-{knowledgeGenerator.GetNext()}" },
+                { "entityVersion", $"{device.ShortDeviceId}-{knowledgeGenerator.GetNext()}" },
                 { "flag", null },
                 { "importedPayee", null },
                 { "isTombstone", false },
