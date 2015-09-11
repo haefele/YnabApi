@@ -18,7 +18,7 @@ namespace YnabApi
 
         private Lazy<Task<IList<Payee>>> _cachedPayees;
         private Lazy<Task<IList<Account>>> _cachedAccounts;
-        private Lazy<Task<IList<Category>>> _cachedCategories;
+        private Lazy<Task<IList<MasterCategory>>> _cachedCategories;
         private Lazy<Task<IList<Transaction>>>  _cachedTransactions;
         private Lazy<Task<IList<MonthlyBudget>>> _cachedMonthlyBudgets;
         private Lazy<Task<JObject>> _cachedBudgetFile;
@@ -137,11 +137,11 @@ namespace YnabApi
             return this._cachedAccounts.Value;
         }
 
-        public Task<IList<Category>> GetCategoriesAsync()
+        public Task<IList<MasterCategory>> GetCategoriesAsync()
         {
             if (this._cachedCategories == null || this._settings.CacheRegisteredDeviceData == false)
             {
-                this._cachedCategories = new Lazy<Task<IList<Category>>>(async () =>
+                this._cachedCategories = new Lazy<Task<IList<MasterCategory>>>(async () =>
                 {
                     try
                     {
@@ -150,23 +150,8 @@ namespace YnabApi
                         var allCategories = budgetFile
                             .Value<JArray>("masterCategories")
                             .Values<JObject>()
-                            .SelectMany(masterCategory =>
-                            {
-                                var subCategories = masterCategory
-                                    .Value<JArray>("subCategories");
-
-                                if (subCategories == null)
-                                    return new List<Category>();
-
-                                return subCategories?
-                                    .Values<JObject>()
-                                    .Select(f => new Category(f, masterCategory));
-                            })
+                            .Select(f => new MasterCategory(f))
                             .ToList();
-                    
-                        allCategories.Add(new Category("Category/__ImmediateIncome__", "Income"));
-                        allCategories.Add(new Category("Category/__DeferredIncome__", "Income"));
-                        allCategories.Add(new Category("Category/__Split__", "Split"));
 
                         return allCategories;
                     }
@@ -191,7 +176,7 @@ namespace YnabApi
                         var budgetFile = await this.GetBudgetFileAsync();
 
                         var allAccounts = await this.GetAccountsAsync();
-                        var allCategories = await this.GetCategoriesAsync();
+                        var allCategories = (await this.GetCategoriesAsync()).SelectMany(f => f.SubCategories).ToList();
                         var allPayees = await this.GetPayeesAsync();
                         
                         var transactions = budgetFile
@@ -239,7 +224,7 @@ namespace YnabApi
                     {
                         var budgetFile = await this.GetBudgetFileAsync();
 
-                        var allCategories = await this.GetCategoriesAsync();
+                        var allCategories = (await this.GetCategoriesAsync()).SelectMany(f => f.SubCategories).ToList();
 
                         return budgetFile
                             .Value<JArray>("monthlyBudgets")
