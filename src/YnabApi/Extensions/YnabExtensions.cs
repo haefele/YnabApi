@@ -10,7 +10,7 @@ namespace YnabApi.Extensions
         {
             string[] invalidMasterCategoryIds =
             {
-                "MasterCategory/__Hidden__"
+                Constants.MasterCategory.Hidden
             };
 
             return categories
@@ -22,9 +22,9 @@ namespace YnabApi.Extensions
         {
             string[] systemCategoryIds = 
             {
-                "Category/__ImmediateIncome__",
-                "Category/__DeferredIncome__",
-                "Category/__Split__",
+                Constants.Category.ImmediateIncomeId,
+                Constants.Category.DeferredIncomeId,
+                Constants.Category.SplitId,
             };
 
             return categories
@@ -35,7 +35,7 @@ namespace YnabApi.Extensions
         public static IEnumerable<Payee> WithoutTransfers(this IEnumerable<Payee> payees)
         {
             return payees
-                .Where(f => f.Id.StartsWith("Payee/Transfer:") == false);
+                .Where(f => f.Id.StartsWith(Constants.Payee.TransferIdStart) == false);
         }
 
         public static IEnumerable<Payee> OnlyActive(this IEnumerable<Payee> payees)

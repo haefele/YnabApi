@@ -85,8 +85,8 @@ namespace YnabApi
                     { "deviceGUID", deviceGuid },
                     { "knowledgeInFullBudgetFile", null },
                     { "YNABVersion", this._settings.ApplicationName },
-                    { "formatVersion", "1.2" },
-                    { "lastDataVersionFullyKnown", "4.2" }
+                    { "formatVersion", Constants.Ynab.FormatVersion },
+                    { "lastDataVersionFullyKnown", Constants.Ynab.LastDataVersionFullyKnown }
                 };
             
                 var dataFolderPath = await this.GetDataFolderPathAsync();

@@ -138,11 +138,11 @@ namespace YnabApi
                             .Select(f => new MasterCategory(f))
                             .ToList();
                         
-                        allCategories.Add(new MasterCategory("Category/__System__", "System", new List<Category>
+                        allCategories.Add(new MasterCategory(Constants.MasterCategory.SystemId, Constants.MasterCategory.System, new List<Category>
                         {
-                            new Category("Category/__Split__", "Split"),
-                            new Category("Category/__DeferredIncome__", "Income for next month"),
-                            new Category("Category/__ImmediateIncome__", "Income for this month"),
+                            new Category(Constants.Category.SplitId, Constants.Category.Split),
+                            new Category(Constants.Category.DeferredIncomeId , Constants.Category.DeferredIncome),
+                            new Category(Constants.Category.ImmediateIncomeId, Constants.Category.ImmediateIncome),
                         }));
 
                         return allCategories;
@@ -258,7 +258,7 @@ namespace YnabApi
                 {
                     {"budgetDataGUID", YnabPaths.DataFolderName(dataPath)},
                     {"budgetGUID", this.Budget.BudgetPath},
-                    {"dataVersion", "4.2"},
+                    {"dataVersion", Constants.Ynab.LastDataVersionFullyKnown },
                     {"deviceGUID", this.DeviceGuid},
                     {"startVersion", startVersion},
                     {"endVersion", endVersion},
