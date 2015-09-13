@@ -20,7 +20,7 @@ namespace YnabApi.Extensions
 
         public static IEnumerable<Category> OnlyActive(this IEnumerable<Category> categories)
         {
-            string[] invalidCategoryIds = 
+            string[] systemCategoryIds = 
             {
                 "Category/__ImmediateIncome__",
                 "Category/__DeferredIncome__",
@@ -29,14 +29,19 @@ namespace YnabApi.Extensions
 
             return categories
                 .Where(f => f.IsTombstone == false)
-                .Where(f => invalidCategoryIds.Contains(f.Id) == false);
+                .Where(f => systemCategoryIds.Contains(f.Id) == false);
+        }
+
+        public static IEnumerable<Payee> WithoutTransfers(this IEnumerable<Payee> payees)
+        {
+            return payees
+                .Where(f => f.Id.StartsWith("Payee/Transfer:") == false);
         }
 
         public static IEnumerable<Payee> OnlyActive(this IEnumerable<Payee> payees)
         {
             return payees
-                .Where(f => f.IsTombstone == false)
-                .Where(f => f.Id.StartsWith("Payee/Transfer:") == false);
+                .Where(f => f.IsTombstone == false);
         }
 
         public static IEnumerable<Transaction> OnlyActive(this IEnumerable<Transaction> transactions)
