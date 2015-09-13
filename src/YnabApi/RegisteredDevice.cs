@@ -137,13 +137,8 @@ namespace YnabApi
                             .Values<JObject>()
                             .Select(f => new MasterCategory(f))
                             .ToList();
-                        
-                        allCategories.Add(new MasterCategory(Constants.MasterCategory.SystemId, Constants.MasterCategory.System, new List<Category>
-                        {
-                            new Category(Constants.Category.SplitId, Constants.Category.Split),
-                            new Category(Constants.Category.DeferredIncomeId , Constants.Category.DeferredIncome),
-                            new Category(Constants.Category.ImmediateIncomeId, Constants.Category.ImmediateIncome),
-                        }));
+
+                        this.EnsureSystemCategoriesAreThere(allCategories);
 
                         return allCategories;
                     }
@@ -155,6 +150,24 @@ namespace YnabApi
             }
 
             return this._cachedCategories.Value;
+        }
+
+        private void EnsureSystemCategoriesAreThere(List<MasterCategory> allCategories)
+        {
+            if (allCategories.Any(f => f.Id == Constants.MasterCategory.InternalId) == false)
+            {
+                allCategories.Add(new MasterCategory(Constants.MasterCategory.InternalId, Constants.MasterCategory.Internal));
+            }
+
+            if (allCategories.Any(f => f.Id == Constants.MasterCategory.IncomeId) == false)
+            {
+                allCategories.Add(new MasterCategory(Constants.MasterCategory.IncomeId, Constants.MasterCategory.Income));
+            }
+
+            if (allCategories.Any(f => f.Id == Constants.MasterCategory.HiddenId) == false)
+            {
+                allCategories.Add(new MasterCategory(Constants.MasterCategory.HiddenId, Constants.MasterCategory.Hidden));
+            }
         }
 
         public Task<IList<Transaction>> GetTransactionsAsync()

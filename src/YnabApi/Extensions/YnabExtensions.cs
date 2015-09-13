@@ -8,28 +8,16 @@ namespace YnabApi.Extensions
     {
         public static IEnumerable<MasterCategory> OnlyActive(this IEnumerable<MasterCategory> categories)
         {
-            string[] invalidMasterCategoryIds =
-            {
-                Constants.MasterCategory.Hidden
-            };
-
             return categories
                 .Where(f => f.IsTombstone == false)
-                .Where(f => invalidMasterCategoryIds.Contains(f.Id) == false);
+                .Where(f => f.IsSystemCategory == false);
         }
 
         public static IEnumerable<Category> OnlyActive(this IEnumerable<Category> categories)
         {
-            string[] systemCategoryIds = 
-            {
-                Constants.Category.ImmediateIncomeId,
-                Constants.Category.DeferredIncomeId,
-                Constants.Category.SplitId,
-            };
-
             return categories
                 .Where(f => f.IsTombstone == false)
-                .Where(f => systemCategoryIds.Contains(f.Id) == false);
+                .Where(f => f.IsSystemCategory == false);
         }
 
         public static IEnumerable<Payee> WithoutTransfers(this IEnumerable<Payee> payees)

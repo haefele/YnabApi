@@ -37,8 +37,7 @@ namespace YnabApi.Tests.Console
             YnabApi api = new YnabApi(settings);
             
             var budgets = await api.GetBudgetsAsync();
-
-            var testBudget = budgets.First(f => f.BudgetName == "Test-Budget");
+            var testBudget = budgets.First(f => f.BudgetName == "Budget");
 
             var myDevice = (await testBudget.GetRegisteredDevicesAsync()).FirstOrDefault(f => f.HasFullKnowledge);
             var categories = await myDevice.GetCategoriesAsync();

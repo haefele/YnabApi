@@ -19,27 +19,53 @@ namespace YnabApi.Items
             this.IsSystemCategory = false;
             this.SubCategories = masterCategory
                 .Value<JArray>("subCategories")
-                .Values<JObject>()
-                .Select(f => new Category(f))
-                .ToList();
+                ?.Values<JObject>()
+                ?.Select(f => new Category(f))
+                ?.ToList() ?? new List<Category>();
+
+            this.EnsureSubCategoriesAreFilledForSystemCategories();
         }
 
-        internal MasterCategory(string id, string name, IList<Category> subCategories)
+        internal MasterCategory(string categoryId, string categoryName)
         {
-            this.Id = id;
-            this.Name = name;
+            this.Id = categoryId;
+            this.Name = categoryName;
             this.IsTombstone = false;
             this.IsSystemCategory = true;
-            this.SubCategories = subCategories;
-        }
 
+            this.EnsureSubCategoriesAreFilledForSystemCategories();
+        }
+        
         public string Id { get; }
         public string Name { get; }
         public bool IsTombstone { get; }
-        public bool IsSystemCategory { get; }
+        public bool IsSystemCategory { get; private set; }
         public IList<Category> SubCategories { get; }
 
         internal JObject GetJson() => (JObject)this._masterCategory.DeepClone();
+        
+        private void EnsureSubCategoriesAreFilledForSystemCategories()
+        {
+            if (this.Id == Constants.MasterCategory.HiddenId)
+            {
+                this.IsSystemCategory = true;
+            }
+
+            if (this.Id == Constants.MasterCategory.IncomeId)
+            {
+                this.IsSystemCategory = true;
+
+                this.SubCategories.Add(new Category(Constants.Category.DeferredIncomeId, Constants.Category.DeferredIncome));
+                this.SubCategories.Add(new Category(Constants.Category.ImmediateIncomeId, Constants.Category.ImmediateIncome));
+            }
+
+            if (this.Id == Constants.MasterCategory.InternalId)
+            {
+                this.IsSystemCategory = true;
+
+                this.SubCategories.Add(new Category(Constants.Category.SplitId, Constants.Category.Split));
+            }
+        }
 
         public override string ToString()
         {
