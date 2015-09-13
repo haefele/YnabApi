@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -22,7 +23,7 @@ namespace YnabApi
         private Lazy<Task<IList<Transaction>>>  _cachedTransactions;
         private Lazy<Task<IList<MonthlyBudget>>> _cachedMonthlyBudgets;
         private Lazy<Task<JObject>> _cachedBudgetFile;
-        private Lazy<Task<IList<JObject>>> _cachedAllLocalChanges;
+        private Lazy<Task<IList<LocalChange>>> _cachedAllLocalChanges;
 
         public RegisteredDevice(YnabApiSettings settings, Budget budget, JObject device)
         {
@@ -37,6 +38,7 @@ namespace YnabApi
             this.CurrentKnowledge = Knowledge.ExtractKnowledgeForDevice(this.KnowledgeString, this.ShortDeviceId);
             this.DeviceGuid = device.Value<string>("deviceGUID");
             this.YnabVersion = device.Value<string>("YNABVersion");
+            this.DeviceType = device.Value<string>("deviceType");
         }
 
         public Budget Budget { get; }
@@ -47,6 +49,7 @@ namespace YnabApi
         public string KnowledgeString { get; private set; }
         public string DeviceGuid { get; }
         public string YnabVersion { get; }
+        public string DeviceType { get; }
         
         public Task<IList<Payee>> GetPayeesAsync()
         {
@@ -64,21 +67,12 @@ namespace YnabApi
                             .Select(f => new Payee(f))
                             .ToHashSet(HashSetDuplicateOptions.Override);
 
-                        var localChanges = await this.GetAllLocalChangesAsync();
+                        var localChanges = await this.GetAllLocalChangesAsync("payee");
 
                         foreach (var localChange in localChanges)
                         {
-                            var localPayees = localChange
-                                .Value<JArray>("items")
-                                .Values<JObject>()
-                                .Where(f => f.Value<string>("entityType") == "payee")
-                                .Select(f => new Payee(f))
-                                .ToList();
-
-                            foreach (var localPayee in localPayees)
-                            {
-                                payees.Add(localPayee, HashSetDuplicateOptions.Override);
-                            }
+                            var localPayee = new Payee(localChange);
+                            payees.Add(localPayee, HashSetDuplicateOptions.Override);
                         }
 
                         return payees.ToList();
@@ -108,21 +102,12 @@ namespace YnabApi
                             .Select(f => new Account(f))
                             .ToHashSet(HashSetDuplicateOptions.Override);
 
-                        var localChanges = await this.GetAllLocalChangesAsync();
+                        var localChanges = await this.GetAllLocalChangesAsync("account");
 
                         foreach (var localChange in localChanges)
                         {
-                            var localAccounts = localChange
-                             .Value<JArray>("items")
-                             .Values<JObject>()
-                             .Where(f => f.Value<string>("entityType") == "account")
-                             .Select(f => new Account(f))
-                             .ToList();
-
-                            foreach (var localAccount in localAccounts)
-                            {
-                                accounts.Add(localAccount, HashSetDuplicateOptions.Override);
-                            }
+                            var localAccount = new Account(localChange);
+                            accounts.Add(localAccount, HashSetDuplicateOptions.Override);
                         }
 
                         return accounts.ToList();
@@ -152,6 +137,13 @@ namespace YnabApi
                             .Values<JObject>()
                             .Select(f => new MasterCategory(f))
                             .ToList();
+                        
+                        allCategories.Add(new MasterCategory(Constants.MasterCategory.SystemId, Constants.MasterCategory.System, new List<Category>
+                        {
+                            new Category(Constants.Category.SplitId, Constants.Category.Split),
+                            new Category(Constants.Category.DeferredIncomeId , Constants.Category.DeferredIncome),
+                            new Category(Constants.Category.ImmediateIncomeId, Constants.Category.ImmediateIncome),
+                        }));
 
                         return allCategories;
                     }
@@ -185,21 +177,12 @@ namespace YnabApi
                             .Select(f => new Transaction(f, allAccounts, allCategories, allPayees))
                             .ToHashSet(HashSetDuplicateOptions.Override);
 
-                        var localChanges = await this.GetAllLocalChangesAsync();
+                        var localChanges = await this.GetAllLocalChangesAsync("transaction");
 
                         foreach (var localChange in localChanges)
                         {
-                            var localTransactions = localChange
-                                .Value<JArray>("items")
-                                .Values<JObject>()
-                                .Where(f => f.Value<string>("entityType") == "transaction")
-                                .Select(f => new Transaction(f, allAccounts, allCategories, allPayees))
-                                .ToList();
-
-                            foreach (var localTransaction in localTransactions)
-                            {
-                                transactions.Add(localTransaction, HashSetDuplicateOptions.Override);
-                            }
+                            var localTransaction = new Transaction(localChange, allAccounts, allCategories, allPayees);
+                            transactions.Add(localTransaction, HashSetDuplicateOptions.Override);
                         }
 
                         return transactions.ToList();
@@ -275,7 +258,7 @@ namespace YnabApi
                 {
                     {"budgetDataGUID", YnabPaths.DataFolderName(dataPath)},
                     {"budgetGUID", this.Budget.BudgetPath},
-                    {"dataVersion", "4.2"},
+                    {"dataVersion", Constants.Ynab.LastDataVersionFullyKnown },
                     {"deviceGUID", this.DeviceGuid},
                     {"startVersion", startVersion},
                     {"endVersion", endVersion},
@@ -329,16 +312,16 @@ namespace YnabApi
             return this._cachedBudgetFile.Value;
         }
 
-        private Task<IList<JObject>> GetAllLocalChangesAsync()
+        private async Task<IList<JObject>> GetAllLocalChangesAsync(string entityType)
         {
             if (this._cachedAllLocalChanges == null || this._settings.CacheRegisteredDeviceData == false)
             {
-                this._cachedAllLocalChanges = new Lazy<Task<IList<JObject>>>(async () =>
+                this._cachedAllLocalChanges = new Lazy<Task<IList<LocalChange>>>(async () =>
                 {
                     var budgetFile = await this.GetBudgetFileAsync();
                     var budgetFileKnowledge = budgetFile.Value<JObject>("fileMetaData").Value<string>("currentKnowledge");
 
-                    var result = new List<JObject>();
+                    var result = new List<LocalChange>();
                     var regex = new Regex(".*_.-([0-9]*).ydiff");
 
                     foreach (var device in await this.Budget.GetRegisteredDevicesAsync())
@@ -360,7 +343,11 @@ namespace YnabApi
                             if (endKnowledge > budgetFileKnowledgeOfThatDevice)
                             {
                                 var fileContent = await this._settings.FileSystem.ReadFileAsync(file);
-                                result.Add(JObject.Parse(fileContent));
+
+                                var json = JObject.Parse(fileContent);
+                                var date = this.ExtractDateFromYdiff(json);
+
+                                result.Add(new LocalChange(date, endKnowledge, json));
                             }
                         }
                     }
@@ -368,8 +355,52 @@ namespace YnabApi
                     return result;
                 });
             }
+            
+            var localChanges = await this._cachedAllLocalChanges.Value;
 
-            return this._cachedAllLocalChanges.Value;
+            return localChanges
+                .OrderBy(f => f.Date)
+                .ThenBy(f => f.EndEntityVersion)
+                .Select(f => f.DiffFileJson)
+                .Select(f => f.Value<JArray>("items"))
+                .SelectMany(f => f.Values<JObject>())
+                .Where(f => f.Value<string>("entityType") == entityType)
+                .ToList();
+        }
+
+        private DateTime ExtractDateFromYdiff(JObject ydiff)
+        {
+            string date = ydiff.Value<string>("publishTime");
+            
+            string[] dateFormats = 
+            {
+                "yyyy-MM-dd hh:mm:ss",
+                "ddd MMM d HH:mm:ss 'GMT'K yyyy",
+            };
+
+            DateTime result;
+
+            if (DateTime.TryParseExact(date, dateFormats, null, DateTimeStyles.AdjustToUniversal, out result))
+                return result;
+
+            throw new InvalidOperationException("Could not parse publish-time");
+        }
+        #endregion
+
+        #region Internal
+
+        private class LocalChange
+        {
+            public LocalChange(DateTime date, int endEntityVersion, JObject diffFileJson)
+            {
+                this.Date = date;
+                this.EndEntityVersion = endEntityVersion;
+                this.DiffFileJson = diffFileJson;
+            }
+
+            public DateTime Date { get; }
+            public int EndEntityVersion { get; }
+            public JObject DiffFileJson { get; }
         }
         #endregion
     }

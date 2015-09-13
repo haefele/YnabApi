@@ -9,7 +9,7 @@ namespace YnabApi.Items
     {
         private readonly JObject _monthlyBudget;
 
-        public MonthlyBudget(JObject monthlyBudget, IList<Category> allCategories)
+        internal MonthlyBudget(JObject monthlyBudget, IList<Category> allCategories)
         {
             this._monthlyBudget = monthlyBudget;
 
