@@ -35,7 +35,7 @@ namespace YnabApi.Extensions
         public static IEnumerable<Payee> WithoutTransfers(this IEnumerable<Payee> payees)
         {
             return payees
-                .Where(f => f.Id.StartsWith(Constants.Payee.TransferIdStart) == false);
+                .Where(f => f.IsTransfer == false);
         }
 
         public static IEnumerable<Payee> OnlyActive(this IEnumerable<Payee> payees)
