@@ -63,7 +63,10 @@ namespace YnabApi
             {
                 var alreadyRegisteredDevices = await this.GetRegisteredDevicesAsync();
 
-                var existingDevice = alreadyRegisteredDevices.FirstOrDefault(f => f.FriendlyName == deviceName && f.YnabVersion == Constants.YnabVersion);
+                var existingDevice = alreadyRegisteredDevices.FirstOrDefault(f => 
+                    f.FriendlyName == deviceName && 
+                    f.YnabVersion == this._settings.ApplicationName && 
+                    f.DeviceType == this._settings.DeviceType);
 
                 if (existingDevice != null)
                     return existingDevice;
@@ -73,7 +76,7 @@ namespace YnabApi
 
                 var json = new JObject
                 {
-                    { "deviceType", "Desktop (Xemio)" },
+                    { "deviceType", this._settings.DeviceType },
                     { "highestDataVersionImported", "4.2" },
                     { "friendlyName", deviceName },
                     { "shortDeviceId", deviceId },
@@ -81,7 +84,7 @@ namespace YnabApi
                     { "knowledge", Knowledge.CreateKnowledgeForNewDevice(alreadyRegisteredDevices.First(f => f.HasFullKnowledge).KnowledgeString, deviceId) },
                     { "deviceGUID", deviceGuid },
                     { "knowledgeInFullBudgetFile", null },
-                    { "YNABVersion", Constants.YnabVersion },
+                    { "YNABVersion", this._settings.ApplicationName },
                     { "formatVersion", "1.2" },
                     { "lastDataVersionFullyKnown", "4.2" }
                 };

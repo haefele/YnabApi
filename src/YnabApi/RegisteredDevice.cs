@@ -38,6 +38,7 @@ namespace YnabApi
             this.CurrentKnowledge = Knowledge.ExtractKnowledgeForDevice(this.KnowledgeString, this.ShortDeviceId);
             this.DeviceGuid = device.Value<string>("deviceGUID");
             this.YnabVersion = device.Value<string>("YNABVersion");
+            this.DeviceType = device.Value<string>("deviceType");
         }
 
         public Budget Budget { get; }
@@ -48,6 +49,7 @@ namespace YnabApi
         public string KnowledgeString { get; private set; }
         public string DeviceGuid { get; }
         public string YnabVersion { get; }
+        public string DeviceType { get; }
         
         public Task<IList<Payee>> GetPayeesAsync()
         {

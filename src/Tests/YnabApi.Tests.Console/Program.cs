@@ -32,7 +32,7 @@ namespace YnabApi.Tests.Console
         {
             var dropboxFileSystem = new DropboxFileSystem("");
 
-            var settings = new YnabApiSettings(new DesktopFileSystem());
+            var settings = new YnabApiSettings(new DesktopFileSystem(), "Ynab Api Test Console", "Ynab Api Desktop");
 
             YnabApi api = new YnabApi(settings);
             
