@@ -32,6 +32,7 @@ namespace YnabApi.Items
             this.Name = categoryName;
             this.IsTombstone = false;
             this.IsSystemCategory = true;
+            this.SubCategories = new List<Category>();
 
             this.EnsureSubCategoriesAreFilledForSystemCategories();
         }
